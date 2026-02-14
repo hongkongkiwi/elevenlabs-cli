@@ -1,0 +1,55 @@
+[package]
+name = "elevenlabs-cli"
+version = "0.1.0"
+edition = "2021"
+authors = ["ElevenLabs CLI Contributors"]
+description = "A comprehensive CLI for ElevenLabs AI audio platform"
+license = "MIT"
+repository = "https://github.com/hongkongkiwi/elevenlabs-cli"
+keywords = ["elevenlabs", "tts", "ai", "audio", "cli", "mcp"]
+categories = ["command-line-utilities", "multimedia::audio"]
+
+[[bin]]
+name = "elevenlabs"
+path = "src/main.rs"
+
+[features]
+default = ["cli"]
+cli = []
+mcp = ["rmcp", "schemars"]
+
+[dependencies]
+elevenlabs_rs = "0.6"
+tokio = { version = "1.35", features = ["full"] }
+tokio-tungstenite = { version = "0.21", features = ["native-tls"] }
+clap = { version = "4.5", features = ["derive", "env"] }
+clap_complete = "4.5"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+anyhow = "1.0"
+colored = "2.1"
+indicatif = "0.17"
+directories = "5.0"
+toml = "0.8"
+reqwest = { version = "0.11", features = ["json", "multipart", "stream"] }
+futures = "0.3"
+futures-util = "0.3"
+bytes = "1.5"
+tempfile = "3.9"
+walkdir = "2.4"
+comfy-table = "7.1"
+dialoguer = "0.11"
+base64 = "0.22"
+percent-encoding = "2.3"
+url = "2.5"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+# MCP support (optional)
+rmcp = { version = "0.15", optional = true, features = ["server", "macros", "schemars", "transport-io", "transport-streamable-http-server"] }
+schemars = { version = "0.8", optional = true }
+
+[dev-dependencies]
+assert_cmd = "2.0"
+predicates = "3.0"
+tempfile = "3.9"

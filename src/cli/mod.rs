@@ -1,0 +1,58 @@
+//! CLI argument definitions organized by domain
+
+mod agent;
+mod args;
+mod audio;
+mod config;
+mod conversation;
+mod design;
+mod dialogue;
+mod dubbing;
+mod history;
+mod knowledge;
+mod library;
+mod models;
+mod music;
+mod native;
+mod phone;
+mod projects;
+mod pronunciation;
+mod rag;
+mod samples;
+mod stt;
+mod tools;
+mod tts;
+mod usage;
+mod user;
+mod voice;
+mod webhook;
+mod workspace;
+
+// Re-export all types at module level
+pub use agent::*;
+pub use args::*;
+pub use audio::*;
+pub use config::*;
+pub use conversation::*;
+pub use design::*;
+pub use dialogue::*;
+pub use dubbing::*;
+pub use history::*;
+pub use knowledge::*;
+pub use library::*;
+pub use models::*;
+pub use music::*;
+pub use native::*;
+pub use phone::*;
+pub use projects::*;
+pub use pronunciation::*;
+pub use rag::*;
+pub use samples::*;
+pub use stt::*;
+pub use tools::*;
+pub use tts::*;
+pub use usage::*;
+pub use user::*;
+pub use voice::*;
+pub use webhook::*;
+pub use workspace::*;
