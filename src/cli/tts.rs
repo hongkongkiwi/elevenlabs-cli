@@ -66,15 +66,15 @@ pub struct TtsTimestampsArgs {
     pub file: Option<String>,
 
     /// Voice ID to use
-    #[arg(short, long, default_value = "Brian")]
+    #[arg(long, default_value = "Brian")]
     pub voice: String,
 
     /// Model to use
-    #[arg(short, long, default_value = "eleven_multilingual_v2")]
+    #[arg(long, default_value = "eleven_multilingual_v2")]
     pub model: String,
 
     /// Output file path
-    #[arg(short, long, value_name = "OUTPUT")]
+    #[arg(long, value_name = "OUTPUT")]
     pub output: Option<String>,
 
     /// Output format
@@ -102,15 +102,15 @@ pub struct TtsStreamArgs {
     pub text: String,
 
     /// Voice ID to use
-    #[arg(short, long, default_value = "Brian")]
+    #[arg(long, default_value = "Brian")]
     pub voice: String,
 
     /// Model to use
-    #[arg(short, long, default_value = "eleven_multilingual_v2")]
+    #[arg(long, default_value = "eleven_multilingual_v2")]
     pub model: String,
 
     /// Output file path
-    #[arg(short, long, value_name = "OUTPUT")]
+    #[arg(long, value_name = "OUTPUT")]
     pub output: Option<String>,
 
     /// Latency optimization (0-4)
