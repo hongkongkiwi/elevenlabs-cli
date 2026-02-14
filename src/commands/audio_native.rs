@@ -52,12 +52,7 @@ pub async fn execute(args: AudioNativeArgs, api_key: &str) -> Result<()> {
     }
 }
 
-async fn list_audio_native(
-    client: &Client,
-    api_key: &str,
-    limit: u32,
-    page: u32,
-) -> Result<()> {
+async fn list_audio_native(client: &Client, api_key: &str, limit: u32, page: u32) -> Result<()> {
     print_info("Fetching audio native projects...");
 
     let url = "https://api.elevenlabs.io/v1/audio-native";
@@ -67,7 +62,10 @@ async fn list_audio_native(
         .query(&[("limit", limit.to_string())])
         .query(&[("page", page.to_string())]);
 
-    let response = request.send().await.context("Failed to fetch audio native projects")?;
+    let response = request
+        .send()
+        .await
+        .context("Failed to fetch audio native projects")?;
 
     if !response.status().is_success() {
         let error = response.text().await?;
@@ -127,8 +125,7 @@ async fn get_audio_native(client: &Client, api_key: &str, project_id: &str) -> R
         return Err(anyhow::anyhow!("API error: {}", error));
     }
 
-    let project: AudioNativeProject =
-        response.json().await.context("Failed to parse response")?;
+    let project: AudioNativeProject = response.json().await.context("Failed to parse response")?;
 
     let mut table = Table::new();
     table.set_header(vec!["Property", "Value"]);
@@ -187,7 +184,10 @@ async fn create_audio_native(
         }
     }
 
-    print_info(&format!("Creating Audio Native project '{}'...", name.cyan()));
+    print_info(&format!(
+        "Creating Audio Native project '{}'...",
+        name.cyan()
+    ));
 
     // Build body
     let mut body = json!({

@@ -153,7 +153,9 @@ async fn main() -> Result<()> {
             commands::tts_stream::execute(args, &api_key, assume_yes).await?
         }
         Commands::Agent(args) => commands::agent::execute(args, &api_key).await?,
-        Commands::Conversation(args) => commands::conversation::execute(args, &api_key, assume_yes).await?,
+        Commands::Conversation(args) => {
+            commands::conversation::execute(args, &api_key, assume_yes).await?
+        }
         Commands::Knowledge(args) => commands::knowledge::execute(args, &api_key).await?,
         Commands::Rag(args) => commands::rag::execute(args, &api_key).await?,
         Commands::Webhook(args) => commands::webhook::execute(args, &api_key).await?,

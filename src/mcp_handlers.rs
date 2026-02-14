@@ -1143,10 +1143,7 @@ pub async fn add_voice_to_library(
     api_key: &str,
     input: AddVoiceToLibraryInput,
 ) -> Result<AddVoiceToLibraryOutput> {
-    use elevenlabs_rs::{
-        endpoints::admin::voice_library::AddSharedVoice,
-        ElevenLabsClient,
-    };
+    use elevenlabs_rs::{endpoints::admin::voice_library::AddSharedVoice, ElevenLabsClient};
 
     let client = ElevenLabsClient::new(api_key);
 
@@ -1306,10 +1303,7 @@ pub async fn get_sample_audio(
     api_key: &str,
     input: GetSampleAudioInput,
 ) -> Result<GetSampleAudioOutput> {
-    use elevenlabs_rs::{
-        endpoints::admin::samples::GetAudioFromSample,
-        ElevenLabsClient,
-    };
+    use elevenlabs_rs::{endpoints::admin::samples::GetAudioFromSample, ElevenLabsClient};
 
     let client = ElevenLabsClient::new(api_key);
 
@@ -1337,10 +1331,7 @@ pub async fn list_dictionaries_ex(
     api_key: &str,
     _input: ListDictionariesInput,
 ) -> Result<ListDictionariesOutput> {
-    use elevenlabs_rs::{
-        endpoints::admin::pronunciation::GetDictionaries,
-        ElevenLabsClient,
-    };
+    use elevenlabs_rs::{endpoints::admin::pronunciation::GetDictionaries, ElevenLabsClient};
 
     let client = ElevenLabsClient::new(api_key);
 
@@ -1491,10 +1482,7 @@ pub async fn delete_dictionary_ex(
 }
 
 #[cfg(feature = "mcp")]
-pub async fn list_rules_ex(
-    api_key: &str,
-    input: ListRulesInput,
-) -> Result<ListRulesOutput> {
+pub async fn list_rules_ex(api_key: &str, input: ListRulesInput) -> Result<ListRulesOutput> {
     use reqwest::Client;
     use serde::Deserialize;
 
@@ -1557,10 +1545,7 @@ pub async fn list_rules_ex(
 }
 
 #[cfg(feature = "mcp")]
-pub async fn add_rules_ex(
-    api_key: &str,
-    input: AddRulesInput,
-) -> Result<AddRulesOutput> {
+pub async fn add_rules_ex(api_key: &str, input: AddRulesInput) -> Result<AddRulesOutput> {
     use reqwest::Client;
 
     let client = Client::new();
@@ -1596,10 +1581,7 @@ pub async fn add_rules_ex(
 }
 
 #[cfg(feature = "mcp")]
-pub async fn remove_rules_ex(
-    api_key: &str,
-    input: RemoveRulesInput,
-) -> Result<RemoveRulesOutput> {
+pub async fn remove_rules_ex(api_key: &str, input: RemoveRulesInput) -> Result<RemoveRulesOutput> {
     use reqwest::Client;
 
     let client = Client::new();
@@ -1643,10 +1625,7 @@ pub async fn get_history_item_ex(
     api_key: &str,
     input: GetHistoryItemInput,
 ) -> Result<GetHistoryItemOutput> {
-    use elevenlabs_rs::{
-        endpoints::admin::history::GetHistoryItem,
-        ElevenLabsClient,
-    };
+    use elevenlabs_rs::{endpoints::admin::history::GetHistoryItem, ElevenLabsClient};
 
     let client = ElevenLabsClient::new(api_key);
 
@@ -1676,10 +1655,7 @@ pub async fn delete_history_item_ex(
     api_key: &str,
     input: DeleteHistoryItemInput,
 ) -> Result<DeleteHistoryItemOutput> {
-    use elevenlabs_rs::{
-        endpoints::admin::history::DeleteHistoryItem,
-        ElevenLabsClient,
-    };
+    use elevenlabs_rs::{endpoints::admin::history::DeleteHistoryItem, ElevenLabsClient};
 
     let client = ElevenLabsClient::new(api_key);
 
@@ -2137,7 +2113,10 @@ pub async fn get_conversation_audio_ex(
         });
     }
 
-    let audio = response.bytes().await.map_err(|e| anyhow::anyhow!("{}", e))?;
+    let audio = response
+        .bytes()
+        .await
+        .map_err(|e| anyhow::anyhow!("{}", e))?;
 
     if let Some(output_file) = input.output {
         std::fs::write(&output_file, &audio)?;
@@ -2163,10 +2142,7 @@ pub async fn get_conversation_audio_ex(
 // ============================================================================
 
 #[cfg(feature = "mcp")]
-pub async fn list_members(
-    api_key: &str,
-    _input: ListMembersInput,
-) -> Result<ListMembersOutput> {
+pub async fn list_members(api_key: &str, _input: ListMembersInput) -> Result<ListMembersOutput> {
     use reqwest::Client;
     use serde::Deserialize;
 
@@ -2220,10 +2196,7 @@ pub async fn list_members(
 }
 
 #[cfg(feature = "mcp")]
-pub async fn invite_member(
-    api_key: &str,
-    input: InviteMemberInput,
-) -> Result<InviteMemberOutput> {
+pub async fn invite_member(api_key: &str, input: InviteMemberInput) -> Result<InviteMemberOutput> {
     use reqwest::Client;
     use serde_json::json;
 
@@ -2256,10 +2229,7 @@ pub async fn invite_member(
 }
 
 #[cfg(feature = "mcp")]
-pub async fn revoke_invite(
-    api_key: &str,
-    input: RevokeInviteInput,
-) -> Result<RevokeInviteOutput> {
+pub async fn revoke_invite(api_key: &str, input: RevokeInviteInput) -> Result<RevokeInviteOutput> {
     use reqwest::Client;
 
     let client = Client::new();
@@ -2289,10 +2259,7 @@ pub async fn revoke_invite(
 }
 
 #[cfg(feature = "mcp")]
-pub async fn list_secrets(
-    api_key: &str,
-    _input: ListSecretsInput,
-) -> Result<ListSecretsOutput> {
+pub async fn list_secrets(api_key: &str, _input: ListSecretsInput) -> Result<ListSecretsOutput> {
     use reqwest::Client;
     use serde::Deserialize;
 
@@ -2344,10 +2311,7 @@ pub async fn list_secrets(
 }
 
 #[cfg(feature = "mcp")]
-pub async fn add_secret(
-    api_key: &str,
-    input: AddSecretInput,
-) -> Result<AddSecretOutput> {
+pub async fn add_secret(api_key: &str, input: AddSecretInput) -> Result<AddSecretOutput> {
     use reqwest::Client;
     use serde_json::json;
 
@@ -2381,10 +2345,7 @@ pub async fn add_secret(
 }
 
 #[cfg(feature = "mcp")]
-pub async fn delete_secret(
-    api_key: &str,
-    input: DeleteSecretInput,
-) -> Result<DeleteSecretOutput> {
+pub async fn delete_secret(api_key: &str, input: DeleteSecretInput) -> Result<DeleteSecretOutput> {
     use reqwest::Client;
 
     let client = Client::new();

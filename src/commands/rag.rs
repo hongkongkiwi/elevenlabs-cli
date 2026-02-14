@@ -23,9 +23,7 @@ pub async fn execute(args: RagArgs, api_key: &str) -> Result<()> {
             document_id,
             rag_index_id,
         } => delete_rag_index(&client, api_key, &document_id, &rag_index_id).await,
-        RagCommands::Rebuild { document_id } => {
-            rebuild_index(&client, api_key, &document_id).await
-        }
+        RagCommands::Rebuild { document_id } => rebuild_index(&client, api_key, &document_id).await,
         RagCommands::IndexStatus { document_id } => {
             get_index_status(&client, api_key, &document_id).await
         }

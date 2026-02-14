@@ -199,12 +199,11 @@ async fn add_rules(
         return Err(anyhow::anyhow!("Rules file not found: {}", rules_file));
     }
 
-    let rules_content = std::fs::read_to_string(file_path)
-        .context("Failed to read rules file")?;
+    let rules_content = std::fs::read_to_string(file_path).context("Failed to read rules file")?;
 
     // Parse to validate JSON
-    let _rules: serde_json::Value = serde_json::from_str(&rules_content)
-        .context("Failed to parse rules JSON")?;
+    let _rules: serde_json::Value =
+        serde_json::from_str(&rules_content).context("Failed to parse rules JSON")?;
 
     print_info(&format!(
         "Adding rules to dictionary '{}'...",
@@ -229,7 +228,10 @@ async fn add_rules(
         return Err(anyhow::anyhow!("API error: {}", error));
     }
 
-    print_success(&format!("Added rules to dictionary '{}'", dictionary_id.green()));
+    print_success(&format!(
+        "Added rules to dictionary '{}'",
+        dictionary_id.green()
+    ));
 
     Ok(())
 }
@@ -246,12 +248,11 @@ async fn remove_rules(
         return Err(anyhow::anyhow!("Rules file not found: {}", rules_file));
     }
 
-    let rules_content = std::fs::read_to_string(file_path)
-        .context("Failed to read rules file")?;
+    let rules_content = std::fs::read_to_string(file_path).context("Failed to read rules file")?;
 
     // Parse to validate JSON
-    let _rules: serde_json::Value = serde_json::from_str(&rules_content)
-        .context("Failed to parse rules JSON")?;
+    let _rules: serde_json::Value =
+        serde_json::from_str(&rules_content).context("Failed to parse rules JSON")?;
 
     print_info(&format!(
         "Removing rules from dictionary '{}'...",
@@ -311,15 +312,16 @@ async fn get_pls_file(
         return Err(anyhow::anyhow!("API error: {}", error));
     }
 
-    let content = response.bytes().await.context("Failed to read PLS content")?;
+    let content = response
+        .bytes()
+        .await
+        .context("Failed to read PLS content")?;
 
     let mut file = File::create(output).context("Failed to create output file")?;
-    file.write_all(&content).context("Failed to write PLS file")?;
+    file.write_all(&content)
+        .context("Failed to write PLS file")?;
 
-    print_success(&format!(
-        "Downloaded PLS file to '{}'",
-        output.green()
-    ));
+    print_success(&format!("Downloaded PLS file to '{}'", output.green()));
 
     Ok(())
 }

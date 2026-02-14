@@ -2,8 +2,8 @@
 //!
 //! These tests verify the CLI binary runs correctly.
 
-use std::process::Command;
 use std::path::Path;
+use std::process::Command;
 
 /// Get the cargo binary path
 fn cargo_bin() -> String {
@@ -25,7 +25,7 @@ fn run_cli(args: &[&str], expected_code: i32) -> bool {
         .env("ELEVENLABS_API_KEY", "test-api-key")
         .output()
         .expect("Failed to run CLI");
-    
+
     output.status.code() == Some(expected_code)
 }
 
@@ -273,6 +273,6 @@ fn test_tts_requires_text() {
 
 #[test]
 fn test_stt_requires_file() {
-    // STT without file should fail  
+    // STT without file should fail
     assert!(!run_cli(&["stt"], 0));
 }

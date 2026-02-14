@@ -29,16 +29,20 @@ pub async fn execute(args: WorkspaceArgs, api_key: &str) -> Result<()> {
             value,
             secret_type,
         } => add_secret(&client, api_key, &name, &value, &secret_type).await,
-        WorkspaceCommands::DeleteSecret { name } => {
-            delete_secret(&client, api_key, &name).await
-        }
+        WorkspaceCommands::DeleteSecret { name } => delete_secret(&client, api_key, &name).await,
         WorkspaceCommands::Share {
             resource_type,
             resource_id,
             share_option,
         } => {
-            share_resource(&client, api_key, &resource_type, &resource_id, &share_option)
-                .await
+            share_resource(
+                &client,
+                api_key,
+                &resource_type,
+                &resource_id,
+                &share_option,
+            )
+            .await
         }
         WorkspaceCommands::Unshare {
             resource_type,
@@ -543,8 +547,7 @@ async fn unshare_resource(
 ) -> Result<()> {
     print_warning(&format!(
         "You are about to unshare {} '{}'",
-        resource_type,
-        resource_id
+        resource_type, resource_id
     ));
 
     let confirm = dialoguer::Confirm::new()

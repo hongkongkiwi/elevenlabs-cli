@@ -46,7 +46,9 @@ pub async fn execute(args: ConversationArgs, api_key: &str, assume_yes: bool) ->
         ConversationCommands::Audio {
             conversation_id,
             output,
-        } => get_conversation_audio(&api_key, &conversation_id, output.as_deref(), assume_yes).await,
+        } => {
+            get_conversation_audio(&api_key, &conversation_id, output.as_deref(), assume_yes).await
+        }
     }
 }
 
@@ -541,11 +543,7 @@ struct ErrorEvent {
 }
 
 /// Delete a conversation
-async fn delete_conversation(
-    api_key: &str,
-    conversation_id: &str,
-    assume_yes: bool,
-) -> Result<()> {
+async fn delete_conversation(api_key: &str, conversation_id: &str, assume_yes: bool) -> Result<()> {
     print_warning(&format!(
         "You are about to delete conversation '{}'",
         conversation_id
@@ -622,7 +620,10 @@ async fn get_conversation_audio(
         return Err(anyhow::anyhow!("API error: {}", error));
     }
 
-    let audio = response.bytes().await.context("Failed to read audio data")?;
+    let audio = response
+        .bytes()
+        .await
+        .context("Failed to read audio data")?;
 
     let default_filename = format!("{}.mp3", conversation_id);
     let output_path = output.unwrap_or(&default_filename);
