@@ -312,7 +312,7 @@ elevenlabs workspace revoke user@example.com
 
 ## MCP Server
 
-The CLI can run as an MCP (Model Context Protocol) server, exposing all ElevenLabs functionality to AI assistants like Claude.
+The CLI can run as an MCP (Model Context Protocol) server, exposing all ElevenLabs functionality to AI assistants like Claude, OpenCode, Cursor, and others.
 
 > **Learn more**: [Model Context Protocol](https://modelcontextprotocol.io/)
 
@@ -325,7 +325,7 @@ This allows AI assistants to:
 - Generate speech and sound effects
 - Transcribe audio
 - Manage voices and agents
-- Access all ElevenLabs API features
+- Access all ElevenLabs API features (80+ tools)
 
 ### MCP Configuration
 
@@ -344,6 +344,25 @@ Add to your MCP client configuration:
   }
 }
 ```
+
+### Available MCP Tools
+
+The MCP server exposes 80+ tools organized by category:
+
+| Category | Tools |
+|----------|-------|
+| **TTS & Audio** | `text_to_speech`, `speech_to_text`, `generate_sfx`, `audio_isolation`, `voice_changer` |
+| **Voice Management** | `list_voices`, `get_voice`, `delete_voice`, `clone_voice`, `voice_settings`, `edit_voice_settings`, `create_voice_design`, `get_voice_design`, `start_voice_fine_tune`, `get_voice_fine_tune_status`, `cancel_voice_fine_tune`, `share_voice`, `get_similar_voices` |
+| **Dubbing** | `create_dubbing`, `get_dubbing_status`, `delete_dubbing` |
+| **History** | `list_history`, `get_history_item`, `delete_history_item`, `history_feedback`, `download_history` |
+| **Agents** | `list_agents`, `get_agent_summaries`, `create_agent`, `get_agent`, `update_agent`, `delete_agent`, `agent_branches`, `batch_list` |
+| **Conversation** | `converse_chat`, `list_conversations`, `get_conversation`, `get_signed_url`, `get_conversation_token`, `delete_conversation`, `get_conversation_audio` |
+| **Knowledge & RAG** | `list_knowledge`, `add_knowledge`, `delete_knowledge`, `create_rag`, `get_rag_status`, `delete_rag`, `rebuild_rag`, `get_rag_index_status` |
+| **Projects** | `list_projects`, `get_project`, `delete_project`, `convert_project`, `list_project_snapshots`, `get_project_audio` |
+| **Music** | `generate_music`, `list_music`, `get_music`, `download_music`, `delete_music` |
+| **Phone** | `list_phones`, `get_phone`, `import_phone`, `update_phone`, `delete_phone`, `test_phone_call` |
+| **Workspace** | `workspace_info`, `list_workspace_members`, `list_workspace_invites`, `invite_workspace_member`, `revoke_workspace_invite`, `list_workspace_api_keys`, `list_secrets`, `add_secret`, `delete_secret`, `share_workspace` |
+| **Other** | `list_models`, `get_model_rates`, `get_usage`, `get_user_info`, `get_user_subscription`, `list_webhooks`, `create_webhook`, `delete_webhook`, `list_library_voices`, `list_library_collections`, `list_pronunciations`, `add_pronunciation`, `delete_pronunciation`, `list_samples`, `delete_sample`, `list_tools`, `get_tool`, `delete_tool`, `list_audio_native`, `get_audio_native`, `create_audio_native` |
 
 ## Output Formats
 

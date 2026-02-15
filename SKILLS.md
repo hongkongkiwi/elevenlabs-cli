@@ -2,6 +2,181 @@
 
 A comprehensive command-line interface for the ElevenLabs AI audio platform with 100% SDK coverage.
 
+> **For AI Agents**: This CLI exposes 80+ MCP tools covering all ElevenLabs functionality. Use `elevenlabs mcp` to start the MCP server.
+
+## MCP Server (Model Context Protocol)
+
+The CLI can run as an MCP server, exposing all ElevenLabs functionality to AI assistants.
+
+### Installation with MCP Support
+
+```bash
+# Build with MCP feature
+cargo install --path . --features mcp
+```
+
+### Starting the MCP Server
+
+```bash
+# Run as stdio MCP server (for AI assistants)
+elevenlabs mcp
+```
+
+### MCP Configuration for AI Clients
+
+#### Claude Desktop
+Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "elevenlabs": {
+      "command": "elevenlabs",
+      "args": ["mcp"],
+      "env": {
+        "ELEVENLABS_API_KEY": "your-api-key"
+      }
+    }
+  }
+}
+```
+
+#### OpenCode / Cursor / Other MCP Clients
+
+```json
+{
+  "mcpServers": {
+    "elevenlabs": {
+      "command": "elevenlabs",
+      "args": ["mcp"],
+      "env": {
+        "ELEVENLABS_API_KEY": "your-api-key"
+      }
+    }
+  }
+}
+```
+
+### Available MCP Tools (80+ tools)
+
+#### TTS & Audio Generation
+| Tool | Description | Parameters |
+|------|-------------|------------|
+| `text_to_speech` | Convert text to natural speech | text (required), voice, model |
+| `speech_to_text` | Transcribe audio to text | file (required), model, language, diarize |
+| `generate_sfx` | Generate sound effects | text (required), duration |
+| `audio_isolation` | Remove background noise | file (required) |
+| `voice_changer` | Transform voice in audio | file (required), voice (required) |
+
+#### Voice Management
+| Tool | Description | Parameters |
+|------|-------------|------------|
+| `list_voices` | List all voices | detailed |
+| `get_voice` | Get voice details | voice_id (required) |
+| `delete_voice` | Delete a voice | voice_id (required) |
+| `clone_voice` | Clone from samples | name (required), samples (required) |
+| `voice_settings` | Get voice settings | voice_id (required) |
+| `edit_voice_settings` | Edit settings | voice_id (required), stability, similarity_boost, style |
+| `create_voice_design` | Create voice from text | text (required), voice_settings |
+| `get_voice_design` | Get design status | design_id (required) |
+| `start_voice_fine_tune` | Start fine-tuning | voice_id (required) |
+| `get_voice_fine_tune_status` | Get fine-tune status | fine_tune_id (required) |
+| `cancel_voice_fine_tune` | Cancel fine-tune | fine_tune_id (required) |
+| `share_voice` | Share voice publicly | voice_id (required) |
+| `get_similar_voices` | Find similar voices | voice_id (required) |
+
+#### Dubbing
+| Tool | Description | Parameters |
+|------|-------------|------------|
+| `create_dubbing` | Create dubbing project | file (required), source_lang (required), target_lang (required) |
+| `get_dubbing_status` | Get dubbing status | dubbing_id (required) |
+| `delete_dubbing` | Delete dubbing | dubbing_id (required) |
+
+#### History
+| Tool | Description | Parameters |
+|------|-------------|------------|
+| `list_history` | List history | limit |
+| `get_history_item` | Get history item | history_item_id (required) |
+| `delete_history_item` | Delete item | history_item_id (required) |
+| `history_feedback` | Submit feedback | history_item_id (required), thumbs_up (required) |
+| `download_history` | Download audio | history_item_id (required) |
+
+#### Agents
+| Tool | Description | Parameters |
+|------|-------------|------------|
+| `list_agents` | List agents | limit |
+| `get_agent_summaries` | Get agent summaries | - |
+| `create_agent` | Create agent | name (required) |
+| `get_agent` | Get agent | agent_id (required) |
+| `update_agent` | Update agent | agent_id (required) |
+| `delete_agent` | Delete agent | agent_id (required) |
+| `agent_branches` | List branches | agent_id (required) |
+| `batch_list` | List batch jobs | - |
+
+#### Conversation
+| Tool | Description | Parameters |
+|------|-------------|------------|
+| `converse_chat` | Chat with agent | agent_id (required), message (required) |
+| `list_conversations` | List conversations | - |
+| `get_conversation` | Get conversation | conversation_id (required) |
+| `get_signed_url` | Get signed URL | conversation_id (required) |
+| `get_conversation_token` | Get token | agent_id (required) |
+| `delete_conversation` | Delete conversation | conversation_id (required) |
+| `get_conversation_audio` | Get audio | conversation_id (required) |
+
+#### Knowledge & RAG
+| Tool | Description | Parameters |
+|------|-------------|------------|
+| `list_knowledge` | List documents | limit |
+| `add_knowledge` | Add document | source_type (required), name (required), content, url, file |
+| `delete_knowledge` | Delete document | document_id (required) |
+| `create_rag` | Create RAG | name (required) |
+| `get_rag_status` | Get RAG status | rag_id (required) |
+| `delete_rag` | Delete RAG | rag_id (required) |
+| `rebuild_rag` | Rebuild RAG | rag_id (required) |
+| `get_rag_index_status` | Get index status | rag_id (required) |
+
+#### Projects
+| Tool | Description | Parameters |
+|------|-------------|------------|
+| `list_projects` | List projects | - |
+| `get_project` | Get project | project_id (required) |
+| `delete_project` | Delete project | project_id (required) |
+| `convert_project` | Convert project | project_id (required), target_format (required) |
+| `list_project_snapshots` | List snapshots | project_id (required) |
+| `get_project_audio` | Get audio | project_id (required) |
+
+#### Music
+| Tool | Description | Parameters |
+|------|-------------|------------|
+| `generate_music` | Generate music | prompt (required) |
+| `list_music` | List music | limit |
+| `get_music` | Get music | music_id (required) |
+| `download_music` | Download music | music_id (required) |
+| `delete_music` | Delete music | music_id (required) |
+
+#### Phone
+| Tool | Description | Parameters |
+|------|-------------|------------|
+| `list_phones` | List phones | - |
+| `get_phone` | Get phone | phone_id (required) |
+| `import_phone` | Import phone | number (required), provider |
+| `update_phone` | Update phone | phone_id (required) |
+| `delete_phone` | Delete phone | phone_id (required) |
+| `test_phone_call` | Test call | phone_id (required) |
+
+#### Other Tools
+- **User**: `get_user_info`, `get_user_subscription`
+- **Models**: `list_models`, `get_model_rates`
+- **Usage**: `get_usage`
+- **Webhooks**: `list_webhooks`, `create_webhook`, `delete_webhook`
+- **Library**: `list_library_voices`, `list_library_collections`
+- **Pronunciation**: `list_pronunciations`, `add_pronunciation`, `delete_pronunciation`, `list_pronunciation_rules`, `add_pronunciation_rules`, `remove_pronunciation_rules`, `get_pronunciation_pls`
+- **Workspace**: `workspace_info`, `list_workspace_members`, `list_workspace_invites`, `invite_workspace_member`, `revoke_workspace_invite`, `list_workspace_api_keys`, `list_secrets`, `add_secret`, `delete_secret`, `share_workspace`
+- **Samples**: `list_samples`, `delete_sample`
+- **Tools**: `list_tools`, `get_tool`, `delete_tool`
+- **Audio Native**: `list_audio_native`, `get_audio_native`, `create_audio_native`
+
 ## Core Skills
 
 ### Text-to-Speech
@@ -18,15 +193,6 @@ A comprehensive command-line interface for the ElevenLabs AI audio platform with
 - Word-level timestamps
 - Multiple models (scribe_v1, scribe_v1_base)
 - Output formats: txt, srt, vtt, json
-
-### Voice Management
-- List, get, delete voices
-- Clone voices from audio samples
-- Edit voice settings (stability, similarity, style)
-- Voice fine-tuning (start, status, cancel)
-- Edit voice name/description
-- Share voice publicly
-- Find similar voices
 
 ### Sound Effects
 - Generate SFX from text descriptions
@@ -47,28 +213,6 @@ A comprehensive command-line interface for the ElevenLabs AI audio platform with
 - Status tracking
 - Download dubbed content
 
-## Agent Skills
-
-### Conversational AI
-- Create, list, get, delete agents
-- Agent configuration (voice, prompt, first message)
-- Agent branches management
-- Batch calls
-- WebSocket conversations
-- Conversation management (list, get, delete)
-- Signed URLs and tokens
-
-### Knowledge Base
-- Add documents (URL, text, file)
-- List, get, delete documents
-- RAG index management
-- Rebuild and status tracking
-
-### Tools
-- List, get, delete agent tools
-
-## Communication Skills
-
 ### Phone Numbers (Twilio/SIP)
 - Import phone numbers
 - List, get, update, delete
@@ -78,8 +222,6 @@ A comprehensive command-line interface for the ElevenLabs AI audio platform with
 ### Webhooks
 - Create, list, delete webhooks
 - Event subscriptions
-
-## Project Skills
 
 ### Projects
 - List, get, delete projects
@@ -97,8 +239,6 @@ A comprehensive command-line interface for the ElevenLabs AI audio platform with
 - Status tracking
 - Download generated music
 
-## Data Management
-
 ### History
 - List generation history
 - Get, delete items
@@ -114,38 +254,27 @@ A comprehensive command-line interface for the ElevenLabs AI audio platform with
 - Account information
 - Subscription details
 
-## Model Skills
-
 ### Models
 - List available TTS/STT models
 - Model rates and pricing
 
-## Voice Library
-
-### Shared Voices
+### Voice Library
 - Browse library voices
 - Filter by category, gender, age, language
 - Search functionality
 - Add to personal library
-
-### Collections
-- List collections
-- Get voices in collection
+- Collections
 
 ### Samples
 - List, delete voice samples
 - Download sample audio
 
-## Pronunciation
-
-### Dictionaries
+### Pronunciation
 - List pronunciation dictionaries
 - Add from PLS files
 - Get, delete dictionaries
 - List/add/remove rules
 - Download PLS files
-
-## Workspace Skills
 
 ### Workspace Management
 - Get workspace info
@@ -153,22 +282,6 @@ A comprehensive command-line interface for the ElevenLabs AI audio platform with
 - List, create, delete API keys
 - List, add, delete secrets
 - Share/unshare resources
-
-## Utility Skills
-
-### Configuration
-- Set/get configuration
-- Default voice, model, output format
-
-### Shell Completions
-- Bash, Zsh, Fish, PowerShell
-
-### Interactive Mode
-- REPL for quick commands
-
-### MCP Server
-- Model Context Protocol server
-- stdio transport for AI assistants
 
 ## Usage
 
@@ -213,3 +326,14 @@ default_voice = "Brian"
 default_model = "eleven_multilingual_v2"
 default_output_format = "mp3_44100_128"
 ```
+
+## AI Agent Usage
+
+For AI agents (Claude, OpenCode, Cursor, etc.), use the MCP protocol:
+
+```bash
+# Start MCP server
+elevenlabs mcp
+```
+
+The AI can then call any of the 80+ tools directly through the MCP protocol.
