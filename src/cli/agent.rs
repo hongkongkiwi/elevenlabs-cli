@@ -150,4 +150,17 @@ pub enum AgentCommands {
     },
     /// List WhatsApp accounts connected to agents
     WhatsappList,
+    /// Get agent widget configuration
+    WidgetGet {
+        /// Agent ID
+        agent_id: String,
+    },
+    /// Set agent widget avatar
+    WidgetAvatar {
+        /// Agent ID
+        agent_id: String,
+        /// Avatar image file path
+        #[arg(short, long)]
+        avatar_file: String,
+    },
 }

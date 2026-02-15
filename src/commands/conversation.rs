@@ -49,6 +49,20 @@ pub async fn execute(args: ConversationArgs, api_key: &str, assume_yes: bool) ->
         } => {
             get_conversation_audio(&api_key, &conversation_id, output.as_deref(), assume_yes).await
         }
+        ConversationCommands::Feedback {
+            conversation_id,
+            thumbs_up,
+            feedback,
+        } => {
+            send_conversation_feedback(&api_key, &conversation_id, thumbs_up, feedback.as_deref())
+                .await
+        }
+        ConversationCommands::Outbound {
+            agent_id,
+            caller_id,
+            to,
+            message,
+        } => outbound_call(&api_key, &agent_id, &caller_id, &to, message.as_deref()).await,
     }
 }
 
@@ -640,5 +654,106 @@ async fn get_conversation_audio(
         "Conversation audio downloaded -> {}",
         output_path.green()
     ));
+    Ok(())
+}
+
+/// Send feedback on a conversation
+async fn send_conversation_feedback(
+    api_key: &str,
+    conversation_id: &str,
+    thumbs_up: bool,
+    feedback: Option<&str>,
+) -> Result<()> {
+    let client = create_http_client();
+
+    let body = if let Some(feedback_text) = feedback {
+        json!({
+            "score": if thumbs_up { "like" } else { "dislike" },
+            "feedback": feedback_text
+        })
+    } else {
+        json!({
+            "score": if thumbs_up { "like" } else { "dislike" }
+        })
+    };
+
+    let url = format!(
+        "https://api.elevenlabs.io/v1/conversations/{}/feedback",
+        conversation_id
+    );
+
+    let response = client
+        .post(&url)
+        .header("xi-api-key", api_key)
+        .json(&body)
+        .send()
+        .await
+        .context("Failed to send conversation feedback")?;
+
+    if !response.status().is_success() {
+        let error = response.text().await.unwrap_or_default();
+        return Err(anyhow::anyhow!("API error: {}", error));
+    }
+
+    let feedback_type = if thumbs_up { "liked" } else { "disliked" };
+    print_success(&format!(
+        "Conversation feedback submitted: {} for '{}'",
+        feedback_type, conversation_id
+    ));
+
+    Ok(())
+}
+
+/// Make an outbound call via Twilio
+async fn outbound_call(
+    api_key: &str,
+    agent_id: &str,
+    caller_id: &str,
+    to: &str,
+    message: Option<&str>,
+) -> Result<()> {
+    let client = create_http_client();
+
+    let mut body = json!({
+        "agent_id": agent_id,
+        "caller_id": caller_id,
+        "phone_number": to,
+    });
+
+    if let Some(msg) = message {
+        body["greeting_message"] = json!(msg);
+    }
+
+    let url = "https://api.elevenlabs.io/v1/conversations/outbound";
+
+    print_info("Initiating outbound call...");
+
+    let response = client
+        .post(url)
+        .header("xi-api-key", api_key)
+        .json(&body)
+        .send()
+        .await
+        .context("Failed to initiate outbound call")?;
+
+    if !response.status().is_success() {
+        let error = response.text().await.unwrap_or_default();
+        return Err(anyhow::anyhow!("API error: {}", error));
+    }
+
+    let result: serde_json::Value = response.json().await.context("Failed to parse response")?;
+
+    println!("\n{}", "Outbound Call:".bold().underline());
+    println!(
+        "  Conversation ID: {}",
+        result["conversation_id"].as_str().unwrap_or("-").cyan()
+    );
+    println!(
+        "  Status: {}",
+        result["status"].as_str().unwrap_or("-").yellow()
+    );
+
+    print_success("Outbound call initiated successfully");
+
     Ok(())
 }

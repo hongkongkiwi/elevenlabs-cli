@@ -87,6 +87,13 @@ pub async fn execute(args: AgentArgs, api_key: &str) -> Result<()> {
             .await
         }
         AgentCommands::WhatsappList => list_whatsapp_accounts(&client, api_key).await,
+        AgentCommands::WidgetGet { agent_id } => {
+            get_agent_widget(&client, api_key, &agent_id).await
+        }
+        AgentCommands::WidgetAvatar {
+            agent_id,
+            avatar_file,
+        } => set_agent_widget_avatar(&client, api_key, &agent_id, &avatar_file).await,
     }
 }
 
@@ -843,5 +850,137 @@ async fn list_whatsapp_accounts(client: &Client, api_key: &str) -> Result<()> {
 
     println!("{}", table);
     print_success("WhatsApp accounts listed successfully");
+    Ok(())
+}
+
+/// Get agent widget configuration
+async fn get_agent_widget(client: &Client, api_key: &str, agent_id: &str) -> Result<()> {
+    print_info(&format!(
+        "Fetching widget configuration for agent '{}'...",
+        agent_id
+    ));
+
+    let url = format!(
+        "https://api.elevenlabs.io/v1/convai/agents/{}/widget/",
+        agent_id
+    );
+
+    let response = client
+        .get(&url)
+        .header("xi-api-key", api_key)
+        .send()
+        .await
+        .context("Failed to fetch widget configuration")?;
+
+    if !response.status().is_success() {
+        let error = response.text().await?;
+        return Err(anyhow::anyhow!("API error: {}", error));
+    }
+
+    let widget: serde_json::Value = response.json().await.context("Failed to parse response")?;
+
+    println!("\n{}", "Widget Configuration:".bold().underline());
+    println!(
+        "  Agent ID: {}",
+        widget["agent_id"].as_str().unwrap_or("-").cyan()
+    );
+
+    if let Some(config) = widget.get("widget_config") {
+        println!(
+            "  Widget Enabled: {}",
+            config["enabled"].as_bool().unwrap_or(false)
+        );
+        println!("  Position: {}", config["position"].as_str().unwrap_or("-"));
+
+        if let Some(avatar) = config.get("avatar") {
+            println!(
+                "  Avatar URL: {}",
+                avatar["url"].as_str().unwrap_or("-").green()
+            );
+        }
+
+        if let Some(greeting) = config.get("greeting") {
+            println!("  Greeting: {}", greeting.as_str().unwrap_or("-"));
+        }
+    }
+
+    print_success("Widget configuration retrieved");
+    Ok(())
+}
+
+/// Set agent widget avatar
+async fn set_agent_widget_avatar(
+    client: &Client,
+    api_key: &str,
+    agent_id: &str,
+    avatar_file: &str,
+) -> Result<()> {
+    print_info(&format!(
+        "Setting widget avatar for agent '{}' from '{}'...",
+        agent_id, avatar_file
+    ));
+
+    let file_path = std::path::Path::new(avatar_file);
+    if !file_path.exists() {
+        return Err(anyhow::anyhow!("File not found: {}", avatar_file));
+    }
+
+    let file_name = file_path
+        .file_name()
+        .and_then(|n| n.to_str())
+        .ok_or_else(|| anyhow::anyhow!("Invalid file name"))?;
+
+    let mime = if avatar_file.ends_with(".png") {
+        "image/png"
+    } else if avatar_file.ends_with(".jpg") || avatar_file.ends_with(".jpeg") {
+        "image/jpeg"
+    } else if avatar_file.ends_with(".webp") {
+        "image/webp"
+    } else {
+        "image/png"
+    };
+
+    let file_data = tokio::fs::read(avatar_file)
+        .await
+        .context("Failed to read avatar file")?;
+
+    let part = reqwest::multipart::Part::bytes(file_data)
+        .file_name(file_name.to_string())
+        .mime_str(mime)
+        .map_err(|e| anyhow::anyhow!("Invalid mime type: {}", e))?;
+
+    let form = reqwest::multipart::Form::new().part("avatar_file", part);
+
+    let url = format!(
+        "https://api.elevenlabs.io/v1/convai/agents/{}/avatar",
+        agent_id
+    );
+
+    let response = client
+        .post(&url)
+        .header("xi-api-key", api_key)
+        .multipart(form)
+        .send()
+        .await
+        .context("Failed to set widget avatar")?;
+
+    if !response.status().is_success() {
+        let error = response.text().await?;
+        return Err(anyhow::anyhow!("API error: {}", error));
+    }
+
+    let result: serde_json::Value = response.json().await.context("Failed to parse response")?;
+
+    println!("\n{}", "Widget Avatar:".bold().underline());
+    println!(
+        "  Agent ID: {}",
+        result["agent_id"].as_str().unwrap_or("-").cyan()
+    );
+    println!(
+        "  Avatar URL: {}",
+        result["avatar_url"].as_str().unwrap_or("-").green()
+    );
+
+    print_success("Widget avatar set successfully");
     Ok(())
 }

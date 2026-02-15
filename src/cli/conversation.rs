@@ -90,4 +90,37 @@ pub enum ConversationCommands {
         #[arg(short, long, value_name = "OUTPUT")]
         output: Option<String>,
     },
+
+    /// Send feedback on a conversation
+    Feedback {
+        /// Conversation ID
+        conversation_id: String,
+
+        /// Thumbs up or down
+        #[arg(short, long)]
+        thumbs_up: bool,
+
+        /// Optional feedback text
+        #[arg(short, long)]
+        feedback: Option<String>,
+    },
+
+    /// Make an outbound call via Twilio
+    Outbound {
+        /// Agent ID
+        #[arg(short, long)]
+        agent_id: String,
+
+        /// Caller ID (your Twilio phone number)
+        #[arg(short, long)]
+        caller_id: String,
+
+        /// Phone number to call
+        #[arg(short, long)]
+        to: String,
+
+        /// Initial greeting/message
+        #[arg(short, long)]
+        message: Option<String>,
+    },
 }
