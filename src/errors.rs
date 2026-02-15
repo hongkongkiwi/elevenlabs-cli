@@ -5,21 +5,20 @@
 //! - Retry logic with exponential backoff for transient errors
 //! - Helpful error messages with links to ElevenLabs documentation
 
+#![allow(dead_code)]
+
 use colored::*;
 use std::fmt;
 use std::time::Duration;
 
-/// Result type alias using anyhow
-pub type Result<T> = anyhow::Result<T>;
-
 /// Maximum number of retry attempts for transient errors
-pub const MAX_RETRIES: u32 = 3;
+const MAX_RETRIES: u32 = 3;
 
 /// Initial delay between retries (in milliseconds)
-pub const INITIAL_BACKOFF_MS: u64 = 1000;
+const INITIAL_BACKOFF_MS: u64 = 1000;
 
 /// Maximum backoff delay (in milliseconds)
-pub const MAX_BACKOFF_MS: u64 = 30000;
+const MAX_BACKOFF_MS: u64 = 30000;
 
 /// API Error types for better error messages
 #[derive(Debug, Clone)]
@@ -320,10 +319,10 @@ fn rand_simple() -> u32 {
 ///
 /// # Returns
 /// The result of the operation if successful, or the last error
-pub async fn with_retry<T, F, Fut>(max_retries: u32, operation: F) -> Result<T>
+pub async fn with_retry<T, F, Fut>(max_retries: u32, operation: F) -> anyhow::Result<T>
 where
     F: Fn() -> Fut,
-    Fut: std::future::Future<Output = Result<T>>,
+    Fut: std::future::Future<Output = anyhow::Result<T>>,
 {
     let mut last_error: Option<anyhow::Error> = None;
 
