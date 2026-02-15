@@ -1,10 +1,28 @@
 //! Error handling utilities for ElevenLabs CLI
+//!
+//! This module provides comprehensive error handling including:
+//! - Error type detection (unauthorized, forbidden, rate limited, etc.)
+//! - Retry logic with exponential backoff for transient errors
+//! - Helpful error messages with links to ElevenLabs documentation
 
 use colored::*;
 use std::fmt;
+use std::time::Duration;
+
+/// Result type alias using anyhow
+pub type Result<T> = anyhow::Result<T>;
+
+/// Maximum number of retry attempts for transient errors
+pub const MAX_RETRIES: u32 = 3;
+
+/// Initial delay between retries (in milliseconds)
+pub const INITIAL_BACKOFF_MS: u64 = 1000;
+
+/// Maximum backoff delay (in milliseconds)
+pub const MAX_BACKOFF_MS: u64 = 30000;
 
 /// API Error types for better error messages
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum ApiError {
     /// Missing or empty API key
     MissingApiKey,
@@ -20,6 +38,8 @@ pub enum ApiError {
     ServerError(u16, String),
     /// Network error
     NetworkError(String),
+    /// Timeout
+    Timeout,
     /// Other errors
     Other(String),
 }
@@ -36,7 +56,45 @@ impl fmt::Display for ApiError {
             ApiError::RateLimited => write!(f, "Rate limited"),
             ApiError::ServerError(code, msg) => write!(f, "Server error {}: {}", code, msg),
             ApiError::NetworkError(msg) => write!(f, "Network error: {}", msg),
+            ApiError::Timeout => write!(f, "Request timed out"),
             ApiError::Other(msg) => write!(f, "Error: {}", msg),
+        }
+    }
+}
+
+/// Whether an error type can be retried
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum Retryable {
+    /// Error is retryable (e.g., rate limited, server error, network issue)
+    Yes,
+    /// Error is not retryable (e.g., invalid auth, permission denied, not found)
+    No,
+    /// Error should be retried with a longer delay (rate limit)
+    YesWithBackoff,
+}
+
+impl ApiError {
+    /// Determine if this error type is retryable
+    pub fn retryable(&self) -> Retryable {
+        match self {
+            ApiError::MissingApiKey => Retryable::No,
+            ApiError::Unauthorized => Retryable::No,
+            ApiError::Forbidden(_) => Retryable::No,
+            ApiError::NotFound(_) => Retryable::No,
+            ApiError::RateLimited => Retryable::YesWithBackoff,
+            ApiError::ServerError(_, _) => Retryable::Yes,
+            ApiError::NetworkError(_) => Retryable::Yes,
+            ApiError::Timeout => Retryable::Yes,
+            ApiError::Other(_) => Retryable::Yes,
+        }
+    }
+
+    /// Get recommended wait time before retry (for rate limits)
+    pub fn retry_after(&self) -> Option<Duration> {
+        match self {
+            ApiError::RateLimited => Some(Duration::from_secs(60)),
+            ApiError::ServerError(_, _) => Some(Duration::from_secs(5)),
+            _ => None,
         }
     }
 }
@@ -77,10 +135,53 @@ pub fn is_rate_limited(err: &anyhow::Error) -> bool {
         || error_str.contains("too many requests")
 }
 
+/// Check if the error is a server error (5xx)
+pub fn is_server_error(err: &anyhow::Error) -> bool {
+    let error_str = err.to_string().to_lowercase();
+    error_str.contains("500")
+        || error_str.contains("502")
+        || error_str.contains("503")
+        || error_str.contains("504")
+        || error_str.contains("server error")
+}
+
+/// Check if the error is a network error
+pub fn is_network_error(err: &anyhow::Error) -> bool {
+    let error_str = err.to_string().to_lowercase();
+    error_str.contains("connection")
+        || error_str.contains("network")
+        || error_str.contains("timeout")
+        || error_str.contains("connect")
+}
+
+/// Parse error into ApiError type
+pub fn parse_api_error(err: &anyhow::Error) -> ApiError {
+    if is_missing_api_key(err) {
+        ApiError::MissingApiKey
+    } else if is_unauthorized(err) {
+        ApiError::Unauthorized
+    } else if is_forbidden(err) {
+        ApiError::Forbidden("Unknown feature".to_string())
+    } else if is_not_found(err) {
+        ApiError::NotFound("Unknown resource".to_string())
+    } else if is_rate_limited(err) {
+        ApiError::RateLimited
+    } else if is_server_error(err) {
+        ApiError::ServerError(500, err.to_string())
+    } else if is_network_error(err) {
+        ApiError::NetworkError(err.to_string())
+    } else {
+        ApiError::Other(err.to_string())
+    }
+}
+
+/// Determine if an error is retryable
+pub fn is_retryable(err: &anyhow::Error) -> Retryable {
+    parse_api_error(err).retryable()
+}
+
 /// Print error with helpful guidance based on error type
 pub fn print_api_error(err: &anyhow::Error) {
-    let error_str = err.to_string();
-
     if is_missing_api_key(err) {
         eprintln!("{}", "Error: API key is required".red());
         eprintln!();
@@ -114,13 +215,47 @@ pub fn print_api_error(err: &anyhow::Error) {
         eprintln!("The requested resource doesn't exist or has been deleted.");
     } else if is_rate_limited(err) {
         eprintln!("{}", "Error: Rate limited".red());
-        eprintln!("Too many requests. Please wait a moment and try again.");
-    } else if error_str.contains("connection") || error_str.contains("network") {
+        eprintln!();
+        eprintln!("{}", "You have made too many requests.".yellow());
+        eprintln!("Please wait at least 60 seconds before trying again.");
+        eprintln!();
+        eprintln!("See: https://elevenlabs.io/docs/api-reference/rate-limits");
+    } else if is_server_error(err) {
+        eprintln!("{}", "Error: Server error".red());
+        eprintln!();
+        eprintln!("{}", "ElevenLabs servers are experiencing issues.".yellow());
+        eprintln!("This is usually temporary. Try again in a few moments.");
+    } else if is_network_error(err) {
         eprintln!("{}", "Error: Network error".red());
         eprintln!("Could not connect to ElevenLabs API.");
         eprintln!("Check your internet connection and try again.");
     } else {
         eprintln!("{}", format!("Error: {}", err).red());
+    }
+}
+
+/// Print a retryable error with backoff information
+pub fn print_retry_error(err: &anyhow::Error, attempt: u32, max_retries: u32) {
+    let retryable = is_retryable(err);
+
+    match retryable {
+        Retryable::YesWithBackoff => {
+            eprintln!(
+                "{}",
+                format!("Rate limited (attempt {}/{})", attempt, max_retries).yellow()
+            );
+            eprintln!("Waiting before retry...");
+        }
+        Retryable::Yes => {
+            eprintln!(
+                "{}",
+                format!("Transient error (attempt {}/{})", attempt, max_retries).yellow()
+            );
+            eprintln!("Retrying...");
+        }
+        Retryable::No => {
+            print_api_error(err);
+        }
     }
 }
 
@@ -141,6 +276,81 @@ pub fn check_api_key(api_key: &Option<String>) -> Option<&String> {
             None
         }
     }
+}
+
+/// Calculate backoff delay with exponential backoff and jitter
+pub fn calculate_backoff(attempt: u32, retryable: Retryable) -> Duration {
+    let base_delay = match retryable {
+        Retryable::YesWithBackoff => {
+            // Longer delay for rate limits
+            INITIAL_BACKOFF_MS * 4
+        }
+        Retryable::Yes => {
+            // Exponential backoff: 1s, 2s, 4s, ...
+            INITIAL_BACKOFF_MS * (2u64.pow(attempt - 1))
+        }
+        Retryable::No => {
+            return Duration::ZERO;
+        }
+    };
+
+    // Cap at max delay
+    let delay = base_delay.min(MAX_BACKOFF_MS);
+
+    // Add jitter (random 0-25% of delay)
+    let jitter = (rand_simple() as u64) * delay / 4000;
+    Duration::from_millis(delay + jitter)
+}
+
+/// Simple pseudo-random number generator (for jitter)
+fn rand_simple() -> u32 {
+    use std::time::{SystemTime, UNIX_EPOCH};
+    let nanos = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap_or_default()
+        .subsec_nanos();
+    nanos.wrapping_mul(1103515245).wrapping_add(12345)
+}
+
+/// Retry a closure with exponential backoff for transient errors
+///
+/// # Arguments
+/// * `max_retries` - Maximum number of retry attempts
+/// * `operation` - The async operation to retry
+///
+/// # Returns
+/// The result of the operation if successful, or the last error
+pub async fn with_retry<T, F, Fut>(max_retries: u32, operation: F) -> Result<T>
+where
+    F: Fn() -> Fut,
+    Fut: std::future::Future<Output = Result<T>>,
+{
+    let mut last_error: Option<anyhow::Error> = None;
+
+    for attempt in 1..=max_retries {
+        match operation().await {
+            Ok(result) => return Ok(result),
+            Err(e) => {
+                last_error = Some(e);
+
+                let retryable = is_retryable(last_error.as_ref().unwrap());
+
+                if retryable == Retryable::No || attempt == max_retries {
+                    // Don't retry non-retryable errors or we've exhausted retries
+                    break;
+                }
+
+                // Print retry info
+                print_retry_error(last_error.as_ref().unwrap(), attempt, max_retries);
+
+                // Calculate and wait
+                let delay = calculate_backoff(attempt, retryable);
+                tokio::time::sleep(delay).await;
+            }
+        }
+    }
+
+    Err(last_error.unwrap_or_else(|| anyhow::anyhow!("Unknown error")))
 }
 
 /// Print feature availability based on subscription tier
