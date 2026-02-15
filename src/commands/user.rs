@@ -1,4 +1,5 @@
 use crate::cli::{UserArgs, UserCommands};
+use crate::errors::print_subscription_info;
 use crate::output::{print_info, print_success};
 use anyhow::Result;
 use colored::*;
@@ -13,6 +14,7 @@ pub async fn execute(args: UserArgs, api_key: &str) -> Result<()> {
     match args.command {
         UserCommands::Info => get_user_info(&client).await?,
         UserCommands::Subscription => get_subscription(&client).await?,
+        UserCommands::Perms => get_permissions(&client).await?,
     }
 
     Ok(())
@@ -102,5 +104,27 @@ async fn get_subscription(client: &ElevenLabsClient) -> Result<()> {
     }
 
     print_success("Subscription details retrieved");
+    Ok(())
+}
+
+async fn get_permissions(client: &ElevenLabsClient) -> Result<()> {
+    print_info("Checking API permissions and feature availability...");
+
+    // Get user info to determine subscription tier
+    let endpoint = GetUserInfo;
+    let user = client.hit(endpoint).await.map_err(|e| anyhow::anyhow!(e))?;
+
+    let tier = &user.subscription.tier;
+
+    println!();
+    println!("{}", "API Key Permissions:".bold().underline());
+    println!("  User ID: {}", user.user_id.cyan());
+    println!("  Subscription: {}", tier.yellow());
+    println!();
+
+    // Use the helper to print feature availability
+    print_subscription_info(tier);
+
+    print_success("Permissions check complete");
     Ok(())
 }

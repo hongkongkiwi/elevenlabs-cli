@@ -15,4 +15,6 @@ pub enum UserCommands {
     Info,
     /// Get user subscription details
     Subscription,
+    /// Check API permissions and feature availability
+    Perms,
 }

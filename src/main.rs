@@ -8,6 +8,7 @@ mod cli;
 mod client;
 mod commands;
 mod config;
+mod errors;
 mod output;
 mod utils;
 mod validation;
@@ -94,12 +95,9 @@ async fn main() -> Result<()> {
 
     // Ensure we have an API key
     let api_key = match config.api_key.as_ref() {
-        Some(key) => key.clone(),
-        None => {
-            eprintln!("{}", "Error: API key is required. Set ELEVENLABS_API_KEY environment variable or use --api-key flag.".red());
-            eprintln!(
-                "\nYou can get your API key from: https://elevenlabs.io/app/settings/api-keys"
-            );
+        Some(key) if !key.is_empty() => key.clone(),
+        _ => {
+            errors::print_api_error(&anyhow::anyhow!("API key is required"));
             std::process::exit(1);
         }
     };
