@@ -1,5 +1,7 @@
 # ElevenLabs CLI
 
+> **⚠️ Unofficial CLI**: This is an independent, community-built CLI client. It is not officially released by ElevenLabs.
+
 A comprehensive command-line interface for the ElevenLabs AI audio platform. Generate speech, transcribe audio, clone voices, manage agents, and more - all from your terminal.
 
 > **Official Documentation**: This CLI wraps the [ElevenLabs API](https://elevenlabs.io/docs/api-reference). For detailed API documentation, visit the official [ElevenLabs Docs](https://elevenlabs.io/docs).

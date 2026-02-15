@@ -1,5 +1,7 @@
 # ElevenLabs CLI Skills
 
+> **⚠️ Unofficial CLI**: This is an independent, community-built CLI client. It is not officially released by ElevenLabs.
+
 A comprehensive command-line interface for the ElevenLabs AI audio platform with 100% SDK coverage.
 
 > **For AI Agents**: This CLI exposes 80+ MCP tools covering all ElevenLabs functionality. Use `elevenlabs mcp` to start the MCP server.
