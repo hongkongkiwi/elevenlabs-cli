@@ -20,6 +20,27 @@ pub async fn execute(args: ToolsArgs, api_key: &str) -> Result<()> {
             list_tools(&client, api_key, search.as_deref(), limit).await
         }
         ToolsCommands::Get { tool_id } => get_tool(&client, api_key, &tool_id).await,
+        ToolsCommands::Create {
+            name,
+            description,
+            schema,
+        } => create_tool(&client, api_key, &name, &description, &schema).await,
+        ToolsCommands::Update {
+            tool_id,
+            name,
+            description,
+            schema,
+        } => {
+            update_tool(
+                &client,
+                api_key,
+                &tool_id,
+                name.as_deref(),
+                description.as_deref(),
+                schema.as_deref(),
+            )
+            .await
+        }
         ToolsCommands::Delete { tool_id } => delete_tool(&client, api_key, &tool_id).await,
     }
 }
@@ -203,5 +224,100 @@ async fn delete_tool(client: &Client, api_key: &str, tool_id: &str) -> Result<()
     }
 
     print_success(&format!("Tool '{}' deleted successfully", tool_id.green()));
+    Ok(())
+}
+
+async fn create_tool(
+    client: &Client,
+    api_key: &str,
+    name: &str,
+    description: &str,
+    schema: &str,
+) -> Result<()> {
+    print_info(&format!("Creating tool '{}'...", name.cyan()));
+
+    // Parse the schema to validate it
+    let schema_json: serde_json::Value = serde_json::from_str(schema)
+        .context("Invalid JSON schema")?;
+
+    let body = serde_json::json!({
+        "name": name,
+        "description": description,
+        "tool_config": schema_json
+    });
+
+    let url = "https://api.elevenlabs.io/v1/convai/tools";
+    let response = client
+        .post(url)
+        .header("xi-api-key", api_key)
+        .json(&body)
+        .send()
+        .await
+        .context("Failed to create tool")?;
+
+    if !response.status().is_success() {
+        let error = response.text().await?;
+        return Err(anyhow::anyhow!("API error: {}", error));
+    }
+
+    let result: serde_json::Value = response.json().await.context("Failed to parse response")?;
+
+    println!("\n{}", "Tool Created:".bold().underline());
+    println!("  Tool ID: {}", result["id"].as_str().unwrap_or("-").cyan());
+    println!("  Name: {}", result["name"].as_str().unwrap_or("-").green());
+
+    print_success("Tool created successfully");
+    Ok(())
+}
+
+async fn update_tool(
+    client: &Client,
+    api_key: &str,
+    tool_id: &str,
+    name: Option<&str>,
+    description: Option<&str>,
+    schema: Option<&str>,
+) -> Result<()> {
+    print_info(&format!("Updating tool '{}'...", tool_id.cyan()));
+
+    let mut body = serde_json::Map::new();
+
+    if let Some(n) = name {
+        body.insert("name".to_string(), serde_json::json!(n));
+    }
+    if let Some(d) = description {
+        body.insert("description".to_string(), serde_json::json!(d));
+    }
+    if let Some(s) = schema {
+        let schema_json: serde_json::Value = serde_json::from_str(s)
+            .context("Invalid JSON schema")?;
+        body.insert("tool_config".to_string(), schema_json);
+    }
+
+    if body.is_empty() {
+        return Err(anyhow::anyhow!("No updates specified"));
+    }
+
+    let url = format!("https://api.elevenlabs.io/v1/convai/tools/{}", tool_id);
+    let response = client
+        .patch(&url)
+        .header("xi-api-key", api_key)
+        .json(&body)
+        .send()
+        .await
+        .context("Failed to update tool")?;
+
+    if !response.status().is_success() {
+        let error = response.text().await?;
+        return Err(anyhow::anyhow!("API error: {}", error));
+    }
+
+    let result: serde_json::Value = response.json().await.context("Failed to parse response")?;
+
+    println!("\n{}", "Tool Updated:".bold().underline());
+    println!("  Tool ID: {}", result["id"].as_str().unwrap_or("-").cyan());
+    println!("  Name: {}", result["name"].as_str().unwrap_or("-").green());
+
+    print_success("Tool updated successfully");
     Ok(())
 }

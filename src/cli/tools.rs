@@ -26,6 +26,37 @@ pub enum ToolsCommands {
         /// Tool ID
         tool_id: String,
     },
+    /// Create a new tool
+    Create {
+        /// Tool name
+        #[arg(short, long)]
+        name: String,
+
+        /// Tool description
+        #[arg(short, long)]
+        description: String,
+
+        /// Tool schema (JSON string)
+        #[arg(short, long)]
+        schema: String,
+    },
+    /// Update an existing tool
+    Update {
+        /// Tool ID
+        tool_id: String,
+
+        /// New tool name
+        #[arg(short, long)]
+        name: Option<String>,
+
+        /// New tool description
+        #[arg(short, long)]
+        description: Option<String>,
+
+        /// New tool schema (JSON string)
+        #[arg(short, long)]
+        schema: Option<String>,
+    },
     /// Delete a tool
     Delete {
         /// Tool ID
