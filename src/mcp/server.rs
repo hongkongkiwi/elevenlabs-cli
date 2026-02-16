@@ -17,17 +17,24 @@ use crate::config::Config;
 #[derive(Clone)]
 pub struct ElevenLabsMcpServer {
     api_key: Arc<RwLock<Option<String>>>,
+    tools: Vec<&'static str>,
 }
 
 impl ElevenLabsMcpServer {
     pub fn new() -> Self {
         Self {
             api_key: Arc::new(RwLock::new(None)),
+            tools: list_tools(),
         }
     }
 
     pub fn with_api_key(mut self, api_key: String) -> Self {
         self.api_key = Arc::new(RwLock::new(Some(api_key)));
+        self
+    }
+
+    pub fn with_tools(mut self, tools: Vec<&'static str>) -> Self {
+        self.tools = tools;
         self
     }
 
@@ -37,6 +44,14 @@ impl ElevenLabsMcpServer {
         name: &str,
         _args: &serde_json::Map<String, serde_json::Value>,
     ) -> Result<CallToolResult, McpError> {
+        // Check if tool is enabled
+        if !self.tools.contains(&name) {
+            return Ok(CallToolResult::success(vec![Content::text(format!(
+                "Tool '{}' is not available. Use one of: {:?}",
+                name, self.tools
+            ))]));
+        }
+
         let result = match name {
             // TTS
             "text_to_speech" => Content::text("Convert text to natural speech. Parameters: text (required), voice, model"),
@@ -336,7 +351,7 @@ pub fn list_tools() -> Vec<&'static str> {
     ]
 }
 
-pub async fn run_server() -> Result<()> {
+pub async fn run_server(enable_tools: Option<&str>, disable_tools: Option<&str>) -> Result<()> {
     tracing_subscriber::fmt()
         .with_env_filter(
             tracing_subscriber::EnvFilter::from_default_env()
@@ -347,10 +362,49 @@ pub async fn run_server() -> Result<()> {
     let config = Config::load().unwrap_or_default();
     let api_key = config.api_key.unwrap_or_else(|| "".to_string());
 
-    let server = ElevenLabsMcpServer::new().with_api_key(api_key);
+    // Get all available tools
+    let all_tools = list_tools();
 
-    tracing::info!("Starting ElevenLabs MCP server with 80+ tools...");
-    tracing::info!("Available tools: {:?}", list_tools());
+    // Parse enable_tools and disable_tools
+    let enabled: Vec<&str> = enable_tools
+        .map(|s| s.split(',').map(|t| t.trim()).collect())
+        .unwrap_or_default();
+
+    let disabled: Vec<&str> = disable_tools
+        .map(|s| s.split(',').map(|t| t.trim()).collect())
+        .unwrap_or_default();
+
+    // Filter tools based on CLI arguments
+    let filtered_tools: Vec<&'static str> = if !enabled.is_empty() {
+        // If enable_tools specified, only include enabled tools
+        all_tools
+            .iter()
+            .filter(|t| enabled.contains(t))
+            .copied()
+            .collect()
+    } else if !disabled.is_empty() {
+        // If disable_tools specified, exclude disabled tools
+        all_tools
+            .iter()
+            .filter(|t| !disabled.contains(t))
+            .copied()
+            .collect()
+    } else {
+        // No filtering, use all tools
+        all_tools
+    };
+
+    let server = ElevenLabsMcpServer::new()
+        .with_api_key(api_key)
+        .with_tools(filtered_tools.clone());
+
+    tracing::info!(
+        "Starting ElevenLabs MCP server with {} tools (enabled: {:?}, disabled: {:?})...",
+        filtered_tools.len(),
+        enabled,
+        disabled
+    );
+    tracing::info!("Available tools: {:?}", filtered_tools);
 
     let service = server.serve(stdio()).await?;
     tracing::info!("MCP server started. Waiting for connections...");

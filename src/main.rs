@@ -64,8 +64,12 @@ async fn main() -> Result<()> {
 
     // Handle MCP mode (feature-gated)
     #[cfg(feature = "mcp")]
-    if matches!(cli.command, Some(Commands::Mcp)) {
-        return mcp::run_server().await;
+    if let Some(Commands::Mcp { enable_tools, disable_tools }) = &cli.command {
+        return mcp::run_server(
+            enable_tools.as_deref(),
+            disable_tools.as_deref(),
+        )
+        .await;
     }
 
     // Handle no command - show help
@@ -167,7 +171,7 @@ async fn main() -> Result<()> {
         Commands::Completions { .. } => unreachable!(),
         Commands::Interactive => run_interactive_mode(&api_key, output_format, assume_yes).await?,
         #[cfg(feature = "mcp")]
-        Commands::Mcp => unreachable!(),
+        Commands::Mcp { .. } => unreachable!(),
     }
 
     Ok(())

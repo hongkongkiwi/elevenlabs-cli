@@ -168,5 +168,13 @@ pub enum Commands {
     /// Run as MCP (Model Context Protocol) server for AI assistants
     #[cfg(feature = "mcp")]
     #[command(name = "mcp")]
-    Mcp,
+    Mcp {
+        /// Comma-separated list of tools to enable (e.g., "tts,stt,voice")
+        #[arg(long)]
+        enable_tools: Option<String>,
+
+        /// Comma-separated list of tools to disable (e.g., "agents,phone")
+        #[arg(long)]
+        disable_tools: Option<String>,
+    },
 }
