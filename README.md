@@ -71,6 +71,14 @@ api_key = "your-api-key"
 default_voice = "Brian"
 default_model = "eleven_multilingual_v2"
 default_output_format = "mp3_44100_128"
+
+# MCP Server settings (optional)
+[mcp]
+enable_tools = "tts,stt"           # Only enable specific tools
+disable_tools = "agents,phone"    # Disable specific tools
+disable_admin = false              # Disable delete, create, update operations
+disable_destructive = false        # Disable only delete operations
+read_only = false                  # Read-only mode
 ```
 
 ## Usage

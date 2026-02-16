@@ -359,6 +359,14 @@ api_key = "your-api-key"
 default_voice = "Brian"
 default_model = "eleven_multilingual_v2"
 default_output_format = "mp3_44100_128"
+
+# MCP Server settings (optional)
+[mcp]
+enable_tools = "tts,stt"
+disable_tools = "agents,phone"
+disable_admin = false
+disable_destructive = false
+read_only = false
 ```
 
 ## AI Agent Usage

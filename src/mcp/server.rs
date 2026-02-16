@@ -449,11 +449,25 @@ pub async fn run_server(
     let config = Config::load().unwrap_or_default();
     let api_key = config.api_key.unwrap_or_else(|| "".to_string());
 
+    // Merge CLI args with config (CLI args take precedence)
+    let mcp_config = &config.mcp;
+    
+    // Get enable_tools - CLI arg takes precedence over config
+    let final_enable_tools = enable_tools.or_else(|| mcp_config.enable_tools.as_deref());
+    
+    // Get disable_tools - CLI arg takes precedence over config
+    let final_disable_tools = disable_tools.or_else(|| mcp_config.disable_tools.as_deref());
+    
+    // Get flags - CLI takes precedence
+    let final_disable_admin = disable_admin || mcp_config.disable_admin;
+    let final_disable_destructive = disable_destructive || mcp_config.disable_destructive;
+    let final_read_only = read_only || mcp_config.read_only;
+
     // Get all available tools
     let all_tools = list_tools();
 
     // Parse enable_tools and disable_tools
-    let enabled: Vec<&str> = enable_tools
+    let enabled: Vec<&str> = final_enable_tools
         .map(|s| s.split(',').map(|t| t.trim()).collect())
         .unwrap_or_default();
 
@@ -492,7 +506,7 @@ pub async fn run_server(
             .filter(|t| !ADMIN_TOOLS.contains(t))
             .copied()
             .collect()
-    } else if disable_destructive {
+    } else if final_disable_destructive {
         // disable_destructive: only block delete operations
         filtered_tools
             .iter()

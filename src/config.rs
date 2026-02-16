@@ -9,6 +9,27 @@ pub struct Config {
     pub default_voice: Option<String>,
     pub default_model: Option<String>,
     pub default_output_format: Option<String>,
+    #[serde(default)]
+    pub mcp: McpConfig,
+}
+
+#[derive(Debug, Serialize, Deserialize, Default, Clone, PartialEq)]
+pub struct McpConfig {
+    /// Comma-separated list of tools to enable
+    #[serde(default)]
+    pub enable_tools: Option<String>,
+    /// Comma-separated list of tools to disable
+    #[serde(default)]
+    pub disable_tools: Option<String>,
+    /// Disable all administrative operations
+    #[serde(default)]
+    pub disable_admin: bool,
+    /// Disable only destructive operations
+    #[serde(default)]
+    pub disable_destructive: bool,
+    /// Read-only mode (same as disable_admin)
+    #[serde(default)]
+    pub read_only: bool,
 }
 
 impl Config {
