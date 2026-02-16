@@ -22,7 +22,29 @@ cargo install --path . --features mcp
 ```bash
 # Run as stdio MCP server (for AI assistants)
 elevenlabs mcp
+
+# Enable only specific tools
+elevenlabs mcp --enable-tools tts,stt,voice
+
+# Disable specific tools
+elevenlabs mcp --disable-tools agents,phone
+
+# Disable all administrative/destructive operations
+elevenlabs mcp --disable-admin
 ```
+
+### MCP Tool Filtering
+
+Control which tools are available in the MCP server:
+
+- `--enable-tools`: Comma-separated list of tools to enable
+- `--disable-tools`: Comma-separated list of tools to disable
+- `--disable-admin`: Disable all delete, create, update operations
+
+This is useful for:
+- Restricting AI assistants to read-only operations
+- Limiting access to sensitive features
+- Reducing the tool set for simpler AI interactions
 
 ### MCP Configuration for AI Clients
 
@@ -309,8 +331,10 @@ elevenlabs voice clone --name "My Voice" --samples sample1.mp3,sample2.mp3
 # List voices
 elevenlabs voice list
 
-# Run MCP server
+# Run MCP server (with optional filtering)
 elevenlabs mcp
+# Or disable admin operations for safety
+elevenlabs mcp --disable-admin
 ```
 
 ## Output Formats

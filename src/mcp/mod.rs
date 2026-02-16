@@ -47,11 +47,19 @@ impl Default for McpConfig {
 
 /// Run the MCP server (only available with mcp feature)
 #[cfg(feature = "mcp")]
-pub async fn run_server(enable_tools: Option<&str>, disable_tools: Option<&str>) -> anyhow::Result<()> {
-    server::run_server(enable_tools, disable_tools).await
+pub async fn run_server(
+    enable_tools: Option<&str>,
+    disable_tools: Option<&str>,
+    disable_admin: bool,
+) -> anyhow::Result<()> {
+    server::run_server(enable_tools, disable_tools, disable_admin).await
 }
 
 #[cfg(not(feature = "mcp"))]
-pub async fn run_server(_enable_tools: Option<&str>, _disable_tools: Option<&str>) -> anyhow::Result<()> {
+pub async fn run_server(
+    _enable_tools: Option<&str>,
+    _disable_tools: Option<&str>,
+    _disable_admin: bool,
+) -> anyhow::Result<()> {
     anyhow::bail!("MCP support not compiled in. Rebuild with --features mcp")
 }

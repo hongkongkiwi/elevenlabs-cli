@@ -176,5 +176,9 @@ pub enum Commands {
         /// Comma-separated list of tools to disable (e.g., "agents,phone")
         #[arg(long)]
         disable_tools: Option<String>,
+
+        /// Disable all administrative/destructive operations (delete, create, update)
+        #[arg(long)]
+        disable_admin: bool,
     },
 }

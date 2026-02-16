@@ -321,6 +321,15 @@ The CLI can run as an MCP (Model Context Protocol) server, exposing all ElevenLa
 ```bash
 # Run as MCP server (requires --features mcp)
 elevenlabs mcp
+
+# Enable only specific tools
+elevenlabs mcp --enable-tools tts,stt,voice
+
+# Disable specific tools
+elevenlabs mcp --disable-tools agents,phone
+
+# Disable all administrative/destructive operations (delete, create, update)
+elevenlabs mcp --disable-admin
 ```
 
 This allows AI assistants to:
@@ -328,6 +337,20 @@ This allows AI assistants to:
 - Transcribe audio
 - Manage voices and agents
 - Access all ElevenLabs API features (80+ tools)
+
+### MCP Tool Filtering
+
+You can control which tools are available in the MCP server:
+
+- `--enable-tools`: Comma-separated list of tools to enable (others disabled)
+- `--disable-tools`: Comma-separated list of tools to disable
+- `--disable-admin`: Disable all administrative/destructive operations (delete, create, update)
+
+Administrative tools blocked by `--disable-admin`:
+- Voice: delete_voice, clone_voice, edit_voice_settings, share_voice
+- Agents: create_agent, update_agent, delete_agent, duplicate_agent
+- Knowledge: add_knowledge, delete_knowledge, create_rag, delete_rag, rebuild_rag
+- And many more...
 
 ### MCP Configuration
 

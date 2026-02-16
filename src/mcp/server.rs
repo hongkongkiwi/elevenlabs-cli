@@ -351,7 +351,71 @@ pub fn list_tools() -> Vec<&'static str> {
     ]
 }
 
-pub async fn run_server(enable_tools: Option<&str>, disable_tools: Option<&str>) -> Result<()> {
+/// Tools that are considered administrative/destructive (can delete, create, modify resources)
+const ADMIN_TOOLS: &[&str] = &[
+    // Voice management - destructive
+    "delete_voice",
+    "clone_voice",
+    "edit_voice_settings",
+    "share_voice",
+    // Dubbing - destructive
+    "delete_dubbing",
+    // History - destructive
+    "delete_history_item",
+    // Samples - destructive
+    "delete_sample",
+    // Tools - administrative
+    "create_tool",
+    "update_tool",
+    "delete_tool",
+    // Webhooks - administrative
+    "create_webhook",
+    "delete_webhook",
+    // Pronunciation - destructive
+    "add_pronunciation",
+    "delete_pronunciation",
+    "add_pronunciation_rules",
+    "remove_pronunciation_rules",
+    // Workspace - administrative
+    "invite_workspace_member",
+    "revoke_workspace_invite",
+    "add_secret",
+    "delete_secret",
+    "share_workspace",
+    // Phone - destructive
+    "import_phone",
+    "update_phone",
+    "delete_phone",
+    // Agent - administrative
+    "create_agent",
+    "update_agent",
+    "delete_agent",
+    "duplicate_agent",
+    "rename_agent_branch",
+    "delete_batch_call",
+    // Conversation - destructive
+    "delete_conversation",
+    // Knowledge - destructive
+    "add_knowledge",
+    "delete_knowledge",
+    // RAG - destructive
+    "create_rag",
+    "delete_rag",
+    "rebuild_rag",
+    // Projects - destructive
+    "delete_project",
+    "convert_project",
+    // Music - destructive
+    "delete_music",
+    // Dialogue - destructive
+    "create_dialogue",
+];
+
+pub async fn run_server(
+    enable_tools: Option<&str>,
+    disable_tools: Option<&str>,
+    disable_admin: bool,
+) -> Result<()> {
     tracing_subscriber::fmt()
         .with_env_filter(
             tracing_subscriber::EnvFilter::from_default_env()
@@ -394,17 +458,29 @@ pub async fn run_server(enable_tools: Option<&str>, disable_tools: Option<&str>)
         all_tools
     };
 
+    // Apply admin filter if requested
+    let final_tools: Vec<&'static str> = if disable_admin {
+        filtered_tools
+            .iter()
+            .filter(|t| !ADMIN_TOOLS.contains(t))
+            .copied()
+            .collect()
+    } else {
+        filtered_tools
+    };
+
     let server = ElevenLabsMcpServer::new()
         .with_api_key(api_key)
-        .with_tools(filtered_tools.clone());
+        .with_tools(final_tools.clone());
 
     tracing::info!(
-        "Starting ElevenLabs MCP server with {} tools (enabled: {:?}, disabled: {:?})...",
-        filtered_tools.len(),
+        "Starting ElevenLabs MCP server with {} tools (enabled: {:?}, disabled: {:?}, disable_admin: {})...",
+        final_tools.len(),
         enabled,
-        disabled
+        disabled,
+        disable_admin
     );
-    tracing::info!("Available tools: {:?}", filtered_tools);
+    tracing::info!("Available tools: {:?}", final_tools);
 
     let service = server.serve(stdio()).await?;
     tracing::info!("MCP server started. Waiting for connections...");
