@@ -17,6 +17,8 @@ path = "src/main.rs"
 default = ["cli"]
 cli = []
 mcp = ["rmcp", "schemars"]
+# Audio features (optional)
+audio = ["rodio", "cpal"]
 
 [dependencies]
 elevenlabs_rs = "0.6"
@@ -24,6 +26,11 @@ tokio = { version = "1.35", features = ["full"] }
 tokio-tungstenite = { version = "0.21", features = ["native-tls"] }
 clap = { version = "4.5", features = ["derive", "env"] }
 clap_complete = "4.5"
+
+# Audio dependencies (optional)
+rodio = { version = "0.19", optional = true }
+cpal = { version = "0.15", optional = true }
+
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 anyhow = "1.0"
