@@ -177,8 +177,16 @@ pub enum Commands {
         #[arg(long)]
         disable_tools: Option<String>,
 
-        /// Disable all administrative/destructive operations (delete, create, update)
+        /// Disable all administrative operations (delete, create, update)
         #[arg(long)]
         disable_admin: bool,
+
+        /// Disable only destructive operations (delete only)
+        #[arg(long)]
+        disable_destructive: bool,
+
+        /// Read-only mode: disable all write operations (same as --disable-admin)
+        #[arg(long)]
+        read_only: bool,
     },
 }

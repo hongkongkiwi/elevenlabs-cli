@@ -51,8 +51,10 @@ pub async fn run_server(
     enable_tools: Option<&str>,
     disable_tools: Option<&str>,
     disable_admin: bool,
+    disable_destructive: bool,
+    read_only: bool,
 ) -> anyhow::Result<()> {
-    server::run_server(enable_tools, disable_tools, disable_admin).await
+    server::run_server(enable_tools, disable_tools, disable_admin, disable_destructive, read_only).await
 }
 
 #[cfg(not(feature = "mcp"))]
@@ -60,6 +62,8 @@ pub async fn run_server(
     _enable_tools: Option<&str>,
     _disable_tools: Option<&str>,
     _disable_admin: bool,
+    _disable_destructive: bool,
+    _read_only: bool,
 ) -> anyhow::Result<()> {
     anyhow::bail!("MCP support not compiled in. Rebuild with --features mcp")
 }

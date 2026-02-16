@@ -328,8 +328,14 @@ elevenlabs mcp --enable-tools tts,stt,voice
 # Disable specific tools
 elevenlabs mcp --disable-tools agents,phone
 
-# Disable all administrative/destructive operations (delete, create, update)
+# Disable all administrative operations (delete, create, update)
 elevenlabs mcp --disable-admin
+
+# Disable only destructive operations (delete only)
+elevenlabs mcp --disable-destructive
+
+# Read-only mode (same as --disable-admin)
+elevenlabs mcp --read-only
 ```
 
 This allows AI assistants to:
@@ -344,7 +350,9 @@ You can control which tools are available in the MCP server:
 
 - `--enable-tools`: Comma-separated list of tools to enable (others disabled)
 - `--disable-tools`: Comma-separated list of tools to disable
-- `--disable-admin`: Disable all administrative/destructive operations (delete, create, update)
+- `--disable-admin`: Disable all administrative operations (delete, create, update)
+- `--disable-destructive`: Disable only destructive operations (delete only)
+- `--read-only`: Read-only mode (same as --disable-admin)
 
 Administrative tools blocked by `--disable-admin`:
 - Voice: delete_voice, clone_voice, edit_voice_settings, share_voice

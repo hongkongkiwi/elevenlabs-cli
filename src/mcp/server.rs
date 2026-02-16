@@ -411,10 +411,33 @@ const ADMIN_TOOLS: &[&str] = &[
     "create_dialogue",
 ];
 
+/// Tools that are purely destructive (delete operations only)
+const DESTRUCTIVE_TOOLS: &[&str] = &[
+    "delete_voice",
+    "delete_dubbing",
+    "delete_history_item",
+    "delete_sample",
+    "delete_tool",
+    "delete_webhook",
+    "delete_pronunciation",
+    "revoke_workspace_invite",
+    "delete_secret",
+    "delete_phone",
+    "delete_agent",
+    "delete_batch_call",
+    "delete_conversation",
+    "delete_knowledge",
+    "delete_rag",
+    "delete_project",
+    "delete_music",
+];
+
 pub async fn run_server(
     enable_tools: Option<&str>,
     disable_tools: Option<&str>,
     disable_admin: bool,
+    disable_destructive: bool,
+    read_only: bool,
 ) -> Result<()> {
     tracing_subscriber::fmt()
         .with_env_filter(
@@ -458,11 +481,22 @@ pub async fn run_server(
         all_tools
     };
 
-    // Apply admin filter if requested
-    let final_tools: Vec<&'static str> = if disable_admin {
+    // Apply filters based on flags
+    // read_only is an alias for disable_admin
+    let is_read_only = read_only || disable_admin;
+    
+    let final_tools: Vec<&'static str> = if is_read_only {
+        // disable_admin/read_only: block all write operations
         filtered_tools
             .iter()
             .filter(|t| !ADMIN_TOOLS.contains(t))
+            .copied()
+            .collect()
+    } else if disable_destructive {
+        // disable_destructive: only block delete operations
+        filtered_tools
+            .iter()
+            .filter(|t| !DESTRUCTIVE_TOOLS.contains(t))
             .copied()
             .collect()
     } else {
@@ -474,11 +508,13 @@ pub async fn run_server(
         .with_tools(final_tools.clone());
 
     tracing::info!(
-        "Starting ElevenLabs MCP server with {} tools (enabled: {:?}, disabled: {:?}, disable_admin: {})...",
+        "Starting ElevenLabs MCP server with {} tools (enabled: {:?}, disabled: {:?}, disable_admin: {}, disable_destructive: {}, read_only: {})...",
         final_tools.len(),
         enabled,
         disabled,
-        disable_admin
+        disable_admin,
+        disable_destructive,
+        read_only
     );
     tracing::info!("Available tools: {:?}", final_tools);
 

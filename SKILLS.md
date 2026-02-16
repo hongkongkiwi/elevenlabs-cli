@@ -29,8 +29,14 @@ elevenlabs mcp --enable-tools tts,stt,voice
 # Disable specific tools
 elevenlabs mcp --disable-tools agents,phone
 
-# Disable all administrative/destructive operations
+# Disable administrative operations
 elevenlabs mcp --disable-admin
+
+# Disable only destructive operations
+elevenlabs mcp --disable-destructive
+
+# Read-only mode
+elevenlabs mcp --read-only
 ```
 
 ### MCP Tool Filtering
@@ -40,6 +46,8 @@ Control which tools are available in the MCP server:
 - `--enable-tools`: Comma-separated list of tools to enable
 - `--disable-tools`: Comma-separated list of tools to disable
 - `--disable-admin`: Disable all delete, create, update operations
+- `--disable-destructive`: Disable only delete operations
+- `--read-only`: Read-only mode (same as --disable-admin)
 
 This is useful for:
 - Restricting AI assistants to read-only operations

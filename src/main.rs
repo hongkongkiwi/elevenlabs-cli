@@ -64,11 +64,13 @@ async fn main() -> Result<()> {
 
     // Handle MCP mode (feature-gated)
     #[cfg(feature = "mcp")]
-    if let Some(Commands::Mcp { enable_tools, disable_tools, disable_admin }) = &cli.command {
+    if let Some(Commands::Mcp { enable_tools, disable_tools, disable_admin, disable_destructive, read_only }) = &cli.command {
         return mcp::run_server(
             enable_tools.as_deref(),
             disable_tools.as_deref(),
             *disable_admin,
+            *disable_destructive,
+            *read_only,
         )
         .await;
     }
