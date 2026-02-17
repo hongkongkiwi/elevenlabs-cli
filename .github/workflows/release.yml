@@ -627,7 +627,7 @@ jobs:
 
   build-snap:
     name: Build and Publish Snap
-    needs: build-apk
+    needs: build-linux
     runs-on: ubuntu-latest
     env:
       SNAP_STORE_LOGIN: ${{ secrets.SNAP_STORE_LOGIN }}
@@ -642,10 +642,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Download musl binary
+      - name: Download glibc binary
         uses: actions/download-artifact@v4
         with:
-          name: binary-musl-x86_64-unknown-linux-musl
+          name: binary-x86_64-unknown-linux-gnu
           path: snap-src
 
       - name: Create snap directory structure and snapcraft.yaml
@@ -653,30 +653,39 @@ jobs:
           VERSION="${{ steps.version.outputs.version }}"
           mkdir -p snap/snap
           mv snap-src/elevenlabs-cli snap/
+          chmod +x snap/elevenlabs-cli
 
           printf '%s\n' \
             'name: elevenlabs-cli' \
             'base: core22' \
             "version: '${VERSION}'" \
+            'title: ElevenLabs CLI' \
             'summary: Unofficial CLI for ElevenLabs text-to-speech API' \
             'description: |' \
             '  ElevenLabs CLI is an unofficial command-line tool for the ElevenLabs' \
             '  text-to-speech and voice AI platform. Supports TTS, voice cloning,' \
             '  and more.' \
             'grade: stable' \
-            'confinement: classic' \
+            'confinement: strict' \
             'license: MIT' \
+            'contact: https://github.com/hongkongkiwi/elevenlabs-cli/issues' \
+            'source-code: https://github.com/hongkongkiwi/elevenlabs-cli' \
             '' \
             'parts:' \
             '  elevenlabs-cli:' \
             '    plugin: dump' \
             '    source: .' \
+            '    stage-packages:' \
+            '      - libasound2' \
             '    organize:' \
             '      elevenlabs-cli: bin/elevenlabs-cli' \
             '' \
             'apps:' \
             '  elevenlabs-cli:' \
-            '    command: bin/elevenlabs-cli' > snap/snap/snapcraft.yaml
+            '    command: bin/elevenlabs-cli' \
+            '    plugs:' \
+            '      - network' \
+            '      - audio-playback' > snap/snap/snapcraft.yaml
 
           cat snap/snap/snapcraft.yaml
 
