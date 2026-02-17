@@ -4,18 +4,15 @@
 //! The WebSocket API allows sending text incrementally and receiving audio chunks in real-time.
 
 use crate::cli::RealtimeTtsArgs;
-use crate::output::{print_info, print_success};
-use crate::utils::{confirm_overwrite, generate_output_filename, write_bytes_to_file};
+use crate::output::print_info;
 
 #[cfg(feature = "audio")]
 use crate::audio::audio_io;
 
-use anyhow::{Context, Result};
+use anyhow::Result;
 use colored::*;
-use futures_util::SinkExt;
-use tokio_tungstenite::{connect_async, tungstenite::protocol::Message};
 
-pub async fn execute(args: RealtimeTtsArgs, api_key: &str, assume_yes: bool) -> Result<()> {
+pub async fn execute(args: RealtimeTtsArgs, _api_key: &str, _assume_yes: bool) -> Result<()> {
     if args.text.is_empty() {
         return Err(anyhow::anyhow!("Text cannot be empty"));
     }
