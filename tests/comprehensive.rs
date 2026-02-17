@@ -7,15 +7,15 @@ use std::process::Command;
 fn bin() -> PathBuf {
     // CARGO_MANIFEST_DIR points to the crate root during tests
     let manifest_dir = std::path::PathBuf::from(std::env!("CARGO_MANIFEST_DIR"));
-    let bin_path = manifest_dir.join("target/release/elevenlabs");
+    let bin_path = manifest_dir.join("target/release/elevenlabs-cli");
     if bin_path.exists() {
         return bin_path;
     }
-    let bin_path = manifest_dir.join("target/debug/elevenlabs");
+    let bin_path = manifest_dir.join("target/debug/elevenlabs-cli");
     if bin_path.exists() {
         return bin_path;
     }
-    manifest_dir.join("target/debug/elevenlabs")
+    manifest_dir.join("target/debug/elevenlabs-cli")
 }
 
 /// Run CLI and check success
