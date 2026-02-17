@@ -186,6 +186,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libasound2-dev pkg-config libssl-dev
+
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
 
@@ -300,8 +305,8 @@ jobs:
               source $HOME/.cargo/env
               rustup target add ${{ matrix.target }}
               
-              # Build
-              cargo build --release --target ${{ matrix.target }}
+              # Build with dynamic linking (musl targets default to static, but Alpine libs are dynamic)
+              RUSTFLAGS="-C target-feature=-crt-static" cargo build --release --target ${{ matrix.target }}
             '
 
       - name: Upload Linux musl binary
@@ -328,7 +333,7 @@ jobs:
           url="https://github.com/hongkongkiwi/elevenlabs-cli"
           arch="${{ matrix.apk_arch }}"
           license="MIT"
-          depends="alsa-lib"
+          depends="alsa-lib openssl"
           subpackages=""
           source=""
           options="!check"
