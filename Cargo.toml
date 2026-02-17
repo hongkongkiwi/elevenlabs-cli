@@ -23,7 +23,7 @@ audio = ["rodio", "cpal"]
 ws = ["elevenlabs_rs/ws"]
 
 [dependencies]
-elevenlabs_rs = "0.6"
+elevenlabs_rs = { version = "0.6", default-features = false, features = ["rustls", "admin", "genai", "playback"] }
 tokio = { version = "1.35", features = ["full"] }
 tokio-tungstenite = { version = "0.21", features = ["rustls-tls-native-roots"] }
 clap = { version = "4.5", features = ["derive", "env"] }
