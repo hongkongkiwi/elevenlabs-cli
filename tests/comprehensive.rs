@@ -161,6 +161,10 @@ fn h_phone() {
 fn h_completions() {
     assert!(ok(&["completions", "--help"]));
 }
+#[test]
+fn h_update() {
+    assert!(ok(&["update", "--help"]));
+}
 
 // ============================================================================
 // Voice Subcommands - 10
