@@ -293,7 +293,7 @@ jobs:
             alpine:3.19 \
             sh -c '
               set -e
-              apk add --no-cache build-base curl pkgconfig alsa-lib-dev
+              apk add --no-cache build-base curl pkgconfig alsa-lib-dev openssl-dev
               
               # Install Rust
               curl --proto "=https" --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable
