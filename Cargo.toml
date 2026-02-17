@@ -6,7 +6,7 @@ authors = ["ElevenLabs CLI Contributors"]
 description = "Unofficial CLI for ElevenLabs text-to-speech API"
 license = "MIT"
 repository = "https://github.com/hongkongkiwi/elevenlabs-cli"
-keywords = ["elevenlabs", "tts", "ai", "audio", "cli", "mcp"]
+keywords = ["elevenlabs", "tts", "ai", "audio", "cli"]
 categories = ["command-line-utilities", "multimedia::audio"]
 
 [[bin]]
