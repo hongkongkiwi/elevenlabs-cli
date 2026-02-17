@@ -24,6 +24,7 @@ use super::samples::*;
 use super::stt::*;
 use super::tools::*;
 use super::tts::*;
+use super::update::*;
 use super::usage::*;
 use super::user::*;
 use super::voice::*;
@@ -164,6 +165,10 @@ pub enum Commands {
         #[arg(value_enum)]
         shell: clap_complete::Shell,
     },
+
+    /// Update the CLI to the latest version
+    #[command(name = "update")]
+    Update(UpdateArgs),
 
     /// Interactive mode (REPL)
     #[command(name = "interactive", alias = "repl")]

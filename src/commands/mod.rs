@@ -21,6 +21,7 @@ pub mod tools;
 pub mod tts;
 pub mod tts_stream;
 pub mod tts_timestamps;
+pub mod update;
 pub mod usage;
 pub mod user;
 pub mod voice;

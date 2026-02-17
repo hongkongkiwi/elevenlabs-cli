@@ -101,6 +101,11 @@ async fn main() -> Result<()> {
         return Ok(());
     }
 
+    // Handle update command (doesn't need API key)
+    if let Commands::Update(args) = command {
+        return commands::update::execute(args).await;
+    }
+
     // Load or create config
     let mut config = Config::load()?;
 
@@ -184,6 +189,7 @@ async fn main() -> Result<()> {
         Commands::Music(args) => commands::music::execute(args, &api_key, assume_yes).await?,
         Commands::Phone(args) => commands::phone::execute(args, &api_key, assume_yes).await?,
         Commands::Completions { .. } => unreachable!(),
+        Commands::Update { .. } => unreachable!(),
         Commands::Interactive => run_interactive_mode(&api_key, output_format, assume_yes).await?,
         #[cfg(feature = "mcp")]
         Commands::Mcp { .. } => unreachable!(),
