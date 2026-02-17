@@ -52,15 +52,15 @@ pub enum AgentCommands {
         description: Option<String>,
 
         /// Voice ID for the agent
-        #[arg(short, long)]
+        #[arg(long)]
         voice_id: Option<String>,
 
         /// First message template
-        #[arg(short, long)]
+        #[arg(short = 'm', long)]
         first_message: Option<String>,
 
         /// System prompt
-        #[arg(short, long)]
+        #[arg(short = 'p', long)]
         system_prompt: Option<String>,
     },
     /// Update an agent

@@ -52,7 +52,7 @@ pub enum KnowledgeCommands {
     /// Add document from file
     AddFromFile {
         /// File path
-        #[arg(short, long, value_name = "FILE")]
+        #[arg(long, value_name = "FILE")]
         file: String,
 
         /// Document name

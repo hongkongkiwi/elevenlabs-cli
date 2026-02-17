@@ -14,7 +14,7 @@ pub enum PhoneCommands {
     /// List all phone numbers
     List {
         /// Filter by agent ID
-        #[arg(short, long)]
+        #[arg(long)]
         agent_id: Option<String>,
     },
     /// Get phone number details
@@ -50,7 +50,7 @@ pub enum PhoneCommands {
         #[arg(short, long)]
         label: Option<String>,
         /// Agent ID to link
-        #[arg(short, long)]
+        #[arg(long)]
         agent_id: Option<String>,
     },
     /// Delete a phone number

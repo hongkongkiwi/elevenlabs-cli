@@ -12,7 +12,7 @@ pub struct ConversationArgs {
 #[derive(Args)]
 pub struct ConverseArgs {
     /// Agent ID to converse with
-    #[arg(short, long)]
+    #[arg(long)]
     pub agent_id: String,
 
     /// Initial user message
@@ -20,7 +20,7 @@ pub struct ConverseArgs {
     pub message: Option<String>,
 
     /// Audio input file (for testing)
-    #[arg(short, long, value_name = "FILE")]
+    #[arg(long, value_name = "FILE")]
     pub audio: Option<String>,
 
     /// Maximum conversation turns
@@ -45,11 +45,11 @@ pub enum ConversationCommands {
     /// List conversations
     List {
         /// Filter by agent ID
-        #[arg(short, long)]
+        #[arg(long)]
         agent_id: Option<String>,
 
         /// Filter by branch ID
-        #[arg(short, long)]
+        #[arg(long)]
         branch_id: Option<String>,
 
         /// Page size
@@ -116,15 +116,15 @@ pub enum ConversationCommands {
     /// Make an outbound call via Twilio
     Outbound {
         /// Agent ID
-        #[arg(short, long)]
+        #[arg(long)]
         agent_id: String,
 
         /// Caller ID (your Twilio phone number)
-        #[arg(short, long)]
+        #[arg(long)]
         caller_id: String,
 
         /// Phone number to call
-        #[arg(short, long)]
+        #[arg(long)]
         to: String,
 
         /// Initial greeting/message

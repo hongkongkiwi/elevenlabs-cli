@@ -16,7 +16,7 @@ pub enum PronunciationCommands {
     /// Add a pronunciation dictionary
     Add {
         /// PLS file path
-        #[arg(short, long)]
+        #[arg(long)]
         file: String,
 
         /// Dictionary name

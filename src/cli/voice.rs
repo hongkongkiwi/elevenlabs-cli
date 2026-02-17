@@ -42,7 +42,7 @@ pub enum VoiceCommands {
         samples: Vec<String>,
 
         /// Directory containing sample files
-        #[arg(short, long, value_name = "DIR")]
+        #[arg(long, value_name = "DIR")]
         samples_dir: Option<String>,
 
         /// Labels (key=value pairs)

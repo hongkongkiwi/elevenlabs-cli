@@ -66,7 +66,7 @@ pub enum VoiceLibraryCommands {
         public_user_id: String,
 
         /// Voice ID
-        #[arg(short, long)]
+        #[arg(long)]
         voice_id: String,
 
         /// Name for the voice in your library
