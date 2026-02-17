@@ -2,6 +2,10 @@ use crate::cli::TtsStreamArgs;
 use crate::client::create_http_client;
 use crate::output::{print_info, print_success};
 use crate::utils::{confirm_overwrite, generate_output_filename, write_bytes_to_file};
+
+#[cfg(feature = "audio")]
+use crate::audio::audio_io;
+
 use anyhow::{Context, Result};
 use colored::*;
 use futures::StreamExt;
@@ -131,6 +135,20 @@ pub async fn execute(args: TtsStreamArgs, api_key: &str, assume_yes: bool) -> Re
     write_bytes_to_file(&audio_bytes, path)?;
 
     print_success(&format!("Streamed speech saved -> {}", output_path.green()));
+
+    // Play audio if requested
+    #[cfg(feature = "audio")]
+    if args.play {
+        print_info("Playing audio...");
+        if let Err(e) = audio_io::play_to_speaker(&audio_bytes) {
+            print_info(&format!("Could not play audio: {}", e));
+        }
+    }
+
+    #[cfg(not(feature = "audio"))]
+    if args.play {
+        print_info("Audio playback not available. Rebuild with --features audio");
+    }
 
     Ok(())
 }

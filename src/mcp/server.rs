@@ -4,7 +4,7 @@
 
 use anyhow::Result;
 use rmcp::{
-    model::{CallToolResult, Content, ServerCapabilities, ServerInfo, Tool},
+    model::{CallToolResult, Content, ServerCapabilities, ServerInfo},
     transport::stdio,
     ErrorData as McpError, ServerHandler, ServiceExt,
 };
@@ -447,21 +447,21 @@ pub async fn run_server(
         .init();
 
     let config = Config::load().unwrap_or_default();
-    let api_key = config.api_key.unwrap_or_else(|| "".to_string());
+    let api_key = config.api_key.unwrap_or_default();
 
     // Merge CLI args with config (CLI args take precedence)
     let mcp_config = &config.mcp;
-    
+
     // Get enable_tools - CLI arg takes precedence over config
     let final_enable_tools = enable_tools.or_else(|| mcp_config.enable_tools.as_deref());
-    
+
     // Get disable_tools - CLI arg takes precedence over config
-    let final_disable_tools = disable_tools.or_else(|| mcp_config.disable_tools.as_deref());
-    
+    let _final_disable_tools = disable_tools.or_else(|| mcp_config.disable_tools.as_deref());
+
     // Get flags - CLI takes precedence
-    let final_disable_admin = disable_admin || mcp_config.disable_admin;
+    let _final_disable_admin = disable_admin || mcp_config.disable_admin;
     let final_disable_destructive = disable_destructive || mcp_config.disable_destructive;
-    let final_read_only = read_only || mcp_config.read_only;
+    let _final_read_only = read_only || mcp_config.read_only;
 
     // Get all available tools
     let all_tools = list_tools();
@@ -498,7 +498,7 @@ pub async fn run_server(
     // Apply filters based on flags
     // read_only is an alias for disable_admin
     let is_read_only = read_only || disable_admin;
-    
+
     let final_tools: Vec<&'static str> = if is_read_only {
         // disable_admin/read_only: block all write operations
         filtered_tools

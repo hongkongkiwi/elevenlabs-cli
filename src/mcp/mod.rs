@@ -54,7 +54,14 @@ pub async fn run_server(
     disable_destructive: bool,
     read_only: bool,
 ) -> anyhow::Result<()> {
-    server::run_server(enable_tools, disable_tools, disable_admin, disable_destructive, read_only).await
+    server::run_server(
+        enable_tools,
+        disable_tools,
+        disable_admin,
+        disable_destructive,
+        read_only,
+    )
+    .await
 }
 
 #[cfg(not(feature = "mcp"))]

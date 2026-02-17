@@ -113,6 +113,10 @@ pub enum Commands {
     #[command(name = "tts-stream")]
     TtsStream(TtsStreamArgs),
 
+    /// Real-time Text-to-Speech via WebSocket (ultra-low latency)
+    #[command(name = "realtime-tts", alias = "rtts")]
+    RealtimeTts(RealtimeTtsArgs),
+
     /// Agent management
     #[command(name = "agent")]
     Agent(AgentArgs),

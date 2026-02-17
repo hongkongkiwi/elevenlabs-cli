@@ -237,8 +237,8 @@ async fn create_tool(
     print_info(&format!("Creating tool '{}'...", name.cyan()));
 
     // Parse the schema to validate it
-    let schema_json: serde_json::Value = serde_json::from_str(schema)
-        .context("Invalid JSON schema")?;
+    let schema_json: serde_json::Value =
+        serde_json::from_str(schema).context("Invalid JSON schema")?;
 
     let body = serde_json::json!({
         "name": name,
@@ -289,8 +289,8 @@ async fn update_tool(
         body.insert("description".to_string(), serde_json::json!(d));
     }
     if let Some(s) = schema {
-        let schema_json: serde_json::Value = serde_json::from_str(s)
-            .context("Invalid JSON schema")?;
+        let schema_json: serde_json::Value =
+            serde_json::from_str(s).context("Invalid JSON schema")?;
         body.insert("tool_config".to_string(), schema_json);
     }
 

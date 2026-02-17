@@ -1,6 +1,10 @@
 use crate::cli::SpeechToTextArgs;
 use crate::output::{print_info, print_success};
 use crate::utils::validate_file_size;
+
+#[cfg(feature = "audio")]
+use crate::audio::audio_io;
+
 use anyhow::Result;
 use colored::*;
 use elevenlabs_rs::{
@@ -31,10 +35,33 @@ struct WordInfo {
 }
 
 pub async fn execute(args: SpeechToTextArgs, api_key: &str) -> Result<()> {
-    let file_path = Path::new(&args.file);
+    // Handle recording from microphone
+    #[cfg(feature = "audio")]
+    if args.record {
+        return record_and_transcribe(args, api_key).await;
+    }
+
+    #[cfg(not(feature = "audio"))]
+    if args.record {
+        return Err(anyhow::anyhow!(
+            "Recording not available. Rebuild with --features audio"
+        ));
+    }
+
+    // Original file-based transcription
+    let file_path = match &args.file {
+        Some(f) => f,
+        None => {
+            return Err(anyhow::anyhow!(
+                "No audio file specified. Use --file or --record"
+            ));
+        }
+    };
+
+    let file_path = Path::new(file_path);
 
     if !file_path.exists() {
-        return Err(anyhow::anyhow!("File not found: {}", args.file));
+        return Err(anyhow::anyhow!("File not found: {}", file_path.display()));
     }
 
     // Validate file size using utility
@@ -43,7 +70,7 @@ pub async fn execute(args: SpeechToTextArgs, api_key: &str) -> Result<()> {
     let metadata = fs::metadata(file_path)?;
     let file_size = metadata.len();
 
-    print_info(&format!("Transcribing '{}'...", args.file.cyan()));
+    print_info(&format!("Transcribing '{}'...", file_path.display()));
     print_info(&format!(
         "File size: {} MB",
         (file_size as f64 / 1_048_576.0).round()
@@ -61,8 +88,8 @@ pub async fn execute(args: SpeechToTextArgs, api_key: &str) -> Result<()> {
     };
 
     // Build request body
-    let mut body =
-        CreateTranscriptBody::new(model, &args.file).with_tag_audio_events(args.tag_audio_events);
+    let mut body = CreateTranscriptBody::new(model, file_path.to_str().unwrap_or("audio.wav"))
+        .with_tag_audio_events(args.tag_audio_events);
 
     if let Some(lang) = &args.language {
         body = body.with_language_code(lang);
@@ -261,4 +288,82 @@ fn format_vtt(
     }
 
     Ok(vtt)
+}
+
+/// Record from microphone and transcribe
+#[cfg(feature = "audio")]
+async fn record_and_transcribe(args: SpeechToTextArgs, api_key: &str) -> Result<()> {
+    use elevenlabs_rs::endpoints::genai::speech_to_text::CreateTranscriptBody;
+    use tempfile::NamedTempFile;
+
+    print_info(&format!(
+        "Recording from microphone for {} seconds...",
+        args.duration
+    ));
+    print_info("Press Ctrl+C to stop recording early");
+
+    // Record audio
+    let audio_data = match audio_io::record_from_microphone(args.duration) {
+        Ok(data) => data,
+        Err(e) => {
+            return Err(anyhow::anyhow!("Failed to record audio: {}", e));
+        }
+    };
+
+    print_info("Recording complete. Saving to temporary file...");
+
+    // Save recorded audio to temp file
+    let mut temp_file = NamedTempFile::new()?;
+    use std::io::Write;
+    temp_file.write_all(&audio_data)?;
+    let temp_path = temp_file.path().to_str().unwrap_or("recorded_audio.wav");
+
+    print_info(&format!("Transcribing '{}'...", temp_path));
+
+    // Create client and transcribe
+    let client = ElevenLabsClient::new(api_key);
+
+    let model = SpeechToTextModel::ScribeV1;
+
+    let body = CreateTranscriptBody::new(model, temp_path.to_string())
+        .with_tag_audio_events(args.tag_audio_events);
+
+    let endpoint = CreateTranscript::new(body);
+
+    match client.hit(endpoint).await {
+        Ok(response) => {
+            // Print results based on format
+            match args.format.as_str() {
+                "json" => {
+                    let words: Vec<WordInfo> = response
+                        .words
+                        .iter()
+                        .map(|w| WordInfo {
+                            text: w.text.clone(),
+                            start: w.start.map(|f| f as f64),
+                            end: w.end.map(|f| f as f64),
+                            speaker_id: w.speaker_id.clone(),
+                        })
+                        .collect();
+                    let output = TranscriptionJsonOutput {
+                        text: response.text.clone(),
+                        language_code: response.language_code.clone(),
+                        language_probability: response.language_probability as f64,
+                        words,
+                    };
+                    println!("{}", serde_json::to_string_pretty(&output)?);
+                }
+                _ => {
+                    println!("{}", response.text);
+                }
+            }
+
+            print_success("Transcription complete");
+        }
+        Err(e) => {
+            return Err(anyhow::anyhow!("Transcription failed: {}", e));
+        }
+    }
+
+    Ok(())
 }

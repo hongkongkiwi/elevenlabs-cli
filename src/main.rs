@@ -4,6 +4,8 @@ use clap_complete::generate;
 use colored::*;
 use std::io;
 
+#[cfg(feature = "audio")]
+mod audio;
 mod cli;
 mod client;
 mod commands;
@@ -64,7 +66,14 @@ async fn main() -> Result<()> {
 
     // Handle MCP mode (feature-gated)
     #[cfg(feature = "mcp")]
-    if let Some(Commands::Mcp { enable_tools, disable_tools, disable_admin, disable_destructive, read_only }) = &cli.command {
+    if let Some(Commands::Mcp {
+        enable_tools,
+        disable_tools,
+        disable_admin,
+        disable_destructive,
+        read_only,
+    }) = &cli.command
+    {
         return mcp::run_server(
             enable_tools.as_deref(),
             disable_tools.as_deref(),
@@ -157,6 +166,9 @@ async fn main() -> Result<()> {
         Commands::TtsStream(args) => {
             commands::tts_stream::execute(args, &api_key, assume_yes).await?
         }
+        Commands::RealtimeTts(args) => {
+            commands::realtime_tts::execute(args, &api_key, assume_yes).await?
+        }
         Commands::Agent(args) => commands::agent::execute(args, &api_key).await?,
         Commands::Conversation(args) => {
             commands::conversation::execute(args, &api_key, assume_yes).await?
@@ -248,6 +260,8 @@ async fn run_interactive_mode(api_key: &str, default_format: &str, assume_yes: b
                     model: "eleven_multilingual_v2".to_string(),
                     output: None,
                     play: false,
+                    output_device: None,
+                    list_output_devices: false,
                     stability: None,
                     similarity_boost: None,
                     style: None,

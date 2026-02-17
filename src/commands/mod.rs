@@ -13,6 +13,7 @@ pub mod phone;
 pub mod projects;
 pub mod pronunciation;
 pub mod rag;
+pub mod realtime_tts;
 pub mod samples;
 pub mod sfx;
 pub mod stt;

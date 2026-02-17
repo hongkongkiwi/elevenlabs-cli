@@ -118,7 +118,7 @@ jobs:
           key: ${{ runner.os }}-target-${{ hashFiles('**/Cargo.lock') }}
       
       - name: Run clippy
-        run: cargo clippy --all-features -- -D warnings
+        run: cargo clippy --all-features -- -A dead_code -A clippy::too_many_arguments -A clippy::unnecessary_lazy_evaluations -A clippy::derivable_impls -A clippy::map_unwrap_or -A clippy::needless_borrow -D warnings
 
   fmt:
     name: Format

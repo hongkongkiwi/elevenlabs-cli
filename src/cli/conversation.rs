@@ -26,6 +26,14 @@ pub struct ConverseArgs {
     /// Maximum conversation turns
     #[arg(long)]
     pub max_turns: Option<u32>,
+
+    /// Play agent audio responses in real-time
+    #[arg(long)]
+    pub play: bool,
+
+    /// Output audio device name
+    #[arg(long, value_name = "DEVICE")]
+    pub output_device: Option<String>,
 }
 
 #[derive(Subcommand)]

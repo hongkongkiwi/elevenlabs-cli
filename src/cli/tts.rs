@@ -29,6 +29,15 @@ pub struct TextToSpeechArgs {
     #[arg(long)]
     pub play: bool,
 
+    /// Output audio device name
+    /// Use --list-output-devices to see available devices
+    #[arg(long, value_name = "DEVICE")]
+    pub output_device: Option<String>,
+
+    /// List available output audio devices
+    #[arg(long)]
+    pub list_output_devices: bool,
+
     /// Stability (0.0-1.0)
     #[arg(long, value_name = "0.0-1.0")]
     pub stability: Option<f32>,
@@ -112,6 +121,19 @@ pub struct TtsStreamArgs {
     /// Output file path
     #[arg(long, value_name = "OUTPUT")]
     pub output: Option<String>,
+
+    /// Play audio after generation
+    #[arg(long)]
+    pub play: bool,
+
+    /// Output audio device name
+    /// Use --list-output-devices to see available devices
+    #[arg(long, value_name = "DEVICE")]
+    pub output_device: Option<String>,
+
+    /// List available output audio devices
+    #[arg(long)]
+    pub list_output_devices: bool,
 
     /// Latency optimization (0-4)
     #[arg(long, value_name = "0-4")]
