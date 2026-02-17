@@ -1,1 +1,26 @@
 /target
+
+# IDE/Editor
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Tool-specific
+.omd/
+.playwright-mcp/
+.serena/
+.aider*
+
+# Build artifacts
+*.pdb
+
+# Environment
+.env
+.env.*
+!.env.example
