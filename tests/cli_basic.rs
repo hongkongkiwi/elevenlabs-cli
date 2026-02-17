@@ -7,15 +7,15 @@ use std::process::Command;
 
 /// Get the cargo binary path
 fn cargo_bin() -> String {
-    let debug_path = "target/debug/elevenlabs";
+    let debug_path = "target/debug/elevenlabs-cli";
     if Path::new(debug_path).exists() {
         return debug_path.to_string();
     }
-    let release_path = "target/release/elevenlabs";
+    let release_path = "target/release/elevenlabs-cli";
     if Path::new(release_path).exists() {
         return release_path.to_string();
     }
-    "elevenlabs".to_string()
+    "elevenlabs-cli".to_string()
 }
 
 /// Run CLI with args and check exit code
