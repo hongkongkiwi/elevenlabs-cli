@@ -1,0 +1,763 @@
+# Release workflow - builds and publishes binaries/packages
+
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version number (e.g., 0.1.0) - required for manual trigger'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  packages: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build-linux:
+    name: Build Linux (${{ matrix.target }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-24.04
+            target: x86_64-unknown-linux-gnu
+          - os: ubuntu-24.04-arm
+            target: aarch64-unknown-linux-gnu
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Cache Rust build artifacts
+        uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: ${{ runner.os }}-${{ hashFiles('**/Cargo.lock') }}-${{ hashFiles('rust-toolchain*') }}
+
+      - name: Build release binary
+        run: cargo build --release --target ${{ matrix.target }}
+
+      - name: Upload binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: binary-${{ matrix.target }}
+          path: target/${{ matrix.target }}/release/elevenlabs-cli
+          retention-days: 5
+
+  build:
+    name: Build (${{ matrix.target }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-14
+            target: x86_64-apple-darwin
+          - os: macos-latest
+            target: aarch64-apple-darwin
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Cache Rust build artifacts
+        uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: ${{ runner.os }}-${{ hashFiles('**/Cargo.lock') }}-${{ hashFiles('rust-toolchain*') }}
+
+      - name: Build release binary
+        run: cargo build --release --target ${{ matrix.target }}
+
+      - name: Upload binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: binary-${{ matrix.target }}
+          path: target/${{ matrix.target }}/release/elevenlabs-cli${{ matrix.target == 'x86_64-pc-windows-msvc' && '.exe' || '' }}
+          retention-days: 5
+
+  release:
+    name: Create Release
+    needs:
+      - build
+      - build-linux
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download all binaries
+        uses: actions/download-artifact@v4
+        with:
+          path: binaries
+          pattern: binary-*
+          merge-multiple: false
+
+      - name: Determine version
+        id: version
+        run: |
+          VERSION_RAW="${{ github.event.inputs.version || github.ref_name }}"
+          VERSION="${VERSION_RAW#v}"
+          
+          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Error: Version '$VERSION' does not match semver format (X.Y.Z)"
+            exit 1
+          fi
+          
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+
+      - name: Prepare release assets
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          mkdir -p release
+          for dir in binaries/binary-*; do
+            target=$(basename "$dir" | sed 's/binary-//')
+            case "$target" in
+              x86_64-pc-windows-msvc)
+                if [ -f "$dir/elevenlabs-cli.exe" ]; then
+                  (cd "$dir" && zip -r "$GITHUB_WORKSPACE/release/elevenlabs-cli-v${VERSION}-${target}.zip" elevenlabs-cli.exe)
+                fi
+                ;;
+              *)
+                if [ -f "$dir/elevenlabs-cli" ]; then
+                  tmpdir=$(mktemp -d)
+                  cp "$dir/elevenlabs-cli" "$tmpdir/elevenlabs-cli"
+                  tar -C "$tmpdir" -czf "release/elevenlabs-cli-v${VERSION}-${target}.tar.gz" .
+                  rm -rf "$tmpdir"
+                fi
+                ;;
+            esac
+          done
+
+          ls -la release
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+          tag_name: v${{ steps.version.outputs.version }}
+          name: v${{ steps.version.outputs.version }}
+          files: release/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload release binaries for finalize job
+        uses: actions/upload-artifact@v4
+        with:
+          name: release
+          path: release/
+          retention-days: 5
+
+  publish-crates:
+    name: Publish to crates.io
+    needs: release
+    runs-on: ubuntu-latest
+    env:
+      CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Rust build artifacts
+        uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: ${{ runner.os }}-${{ hashFiles('**/Cargo.lock') }}-${{ hashFiles('rust-toolchain*') }}
+
+      - name: Publish to crates.io
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+        run: |
+          if [ -n "$CARGO_REGISTRY_TOKEN" ]; then
+            cargo publish --registry crates-io --allow-dirty
+          else
+            echo "CARGO_REGISTRY_TOKEN not set, skipping crates.io publish"
+          fi
+
+  build-deb:
+    name: Build Debian Package (${{ matrix.arch }})
+    needs: build-linux
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: amd64
+            runner: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            deb_arch: amd64
+          - arch: arm64
+            runner: ubuntu-24.04-arm
+            target: aarch64-unknown-linux-gnu
+            deb_arch: arm64
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Cache Rust build artifacts
+        uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: ${{ runner.os }}-${{ hashFiles('**/Cargo.lock') }}-${{ hashFiles('rust-toolchain*') }}
+
+      - name: Install cargo-deb
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-deb
+
+      - name: Download release binary
+        uses: actions/download-artifact@v4
+        with:
+          name: binary-${{ matrix.target }}
+          path: target/${{ matrix.target }}/release
+
+      - name: Build .deb package
+        run: cargo deb --target ${{ matrix.target }} --no-build
+
+      - name: Upload .deb package
+        uses: actions/upload-artifact@v4
+        with:
+          name: elevenlabs-cli.deb-${{ matrix.arch }}
+          path: target/${{ matrix.target }}/debian/*_${{ matrix.deb_arch }}.deb
+
+  build-apk:
+    name: Build Alpine Package (${{ matrix.arch }})
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: amd64
+            runner: ubuntu-latest
+            target: x86_64-unknown-linux-musl
+            apk_arch: x86_64
+          - arch: arm64
+            runner: ubuntu-24.04-arm
+            target: aarch64-unknown-linux-musl
+            apk_arch: aarch64
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rust and musl-tools
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Cache Rust build artifacts
+        uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: ${{ runner.os }}-${{ hashFiles('**/Cargo.lock') }}-${{ hashFiles('rust-toolchain*') }}
+
+      - name: Install musl tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y musl-tools
+          if [ "${{ matrix.arch }}" = "amd64" ]; then
+            sudo apt-get install -y gcc-multilib
+          fi
+
+      - name: Build static binary
+        run: cargo build --release --target ${{ matrix.target }}
+
+      - name: Upload Linux musl binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: binary-musl-${{ matrix.target }}
+          path: target/${{ matrix.target }}/release/elevenlabs-cli
+          retention-days: 5
+
+      - name: Create Alpine package structure
+        run: |
+          mkdir -p apk-build/bin
+          cp target/${{ matrix.target }}/release/elevenlabs-cli apk-build/bin/
+
+      - name: Create APKBUILD
+        run: |
+          VERSION="${{ github.event.inputs.version || github.ref_name }}"
+          VERSION="${VERSION#v}"
+          cat > apk-build/APKBUILD << 'EOF'
+          pkgname=elevenlabs-cli
+          pkgver=VERSION_PLACEHOLDER
+          pkgrel=0
+          pkgdesc="Unofficial CLI for ElevenLabs text-to-speech API"
+          url="https://github.com/hongkongkiwi/elevenlabs-cli"
+          arch="${{ matrix.apk_arch }}"
+          license="MIT"
+          depends=""
+          subpackages=""
+          source=""
+          options="!check"
+
+          build() {
+            return 0
+          }
+
+          package() {
+            mkdir -p "$pkgdir"/usr/bin
+            install -m 755 "$startdir"/bin/elevenlabs-cli "$pkgdir"/usr/bin/elevenlabs-cli
+          }
+          EOF
+          sed -i "s/VERSION_PLACEHOLDER/${VERSION}/" apk-build/APKBUILD
+
+      - name: Build .apk package
+        run: |
+          mkdir -p apk-packages
+          docker run --rm \
+            -v "$PWD:/work" \
+            -w /work/apk-build \
+            alpine:3.19 \
+            sh -c 'apk add --no-cache alpine-sdk && \
+              adduser -D builder && addgroup builder abuild && \
+              chown -R builder:builder /work/apk-build /work/apk-packages && \
+              su builder -c "export REPODEST=/work/apk-packages PACKAGER= && abuild-keygen -a -n" && \
+              cp /home/builder/.abuild/*.rsa.pub /etc/apk/keys/ && \
+              su builder -c "export REPODEST=/work/apk-packages PACKAGER= && abuild -r"'
+
+      - name: Upload Alpine package
+        uses: actions/upload-artifact@v4
+        with:
+          name: elevenlabs-cli.apk-${{ matrix.arch }}
+          path: apk-packages/**/*.apk
+
+  finalize-release:
+    name: Finalize Release
+    needs:
+      - release
+      - build-deb
+      - build-apk
+      - publish-docker
+    runs-on: ubuntu-latest
+    env:
+      GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+    steps:
+      - name: Download release assets
+        uses: actions/download-artifact@v4
+        with:
+          name: release
+          path: release-assets
+
+      - name: List downloaded assets
+        run: |
+          echo "=== release-assets contents ==="
+          find release-assets -type f -exec ls -la {} \;
+
+      - name: Download all packages
+        uses: actions/download-artifact@v4
+        with:
+          path: packages
+          pattern: elevenlabs-cli.*
+          merge-multiple: false
+
+      - name: Prepare release assets
+        run: |
+          mkdir -p release-packages
+
+          cp -r release-assets/* release-packages/ 2>/dev/null || true
+
+          for dir in packages/*; do
+            if [ -d "$dir" ]; then
+              cp -r "$dir"/* release-packages/ 2>/dev/null || true
+            fi
+          done
+
+          ls -la release-packages/
+
+      - name: Generate SHA256 checksums
+        run: |
+          cd release-packages
+          find . -maxdepth 1 -type f -exec sha256sum {} \; > SHA256SUMS.txt
+          cat SHA256SUMS.txt
+
+      - name: Setup GPG for signing
+        if: ${{ env.GPG_PRIVATE_KEY != '' }}
+        uses: actions/cache@v5
+        with:
+          path: ~/.gnupg
+          key: gpg-key-${{ secrets.GPG_PRIVATE_KEY }}
+
+      - name: Import GPG key
+        if: ${{ env.GPG_PRIVATE_KEY != '' }}
+        run: |
+          echo '${{ secrets.GPG_PRIVATE_KEY }}' | gpg --batch --import --
+          gpg --list-secret-keys --keyid-format LONG
+
+      - name: Sign checksums
+        if: ${{ env.GPG_PRIVATE_KEY != '' }}
+        run: |
+          cd release-packages
+          gpg --batch --yes --armor --detach-sign SHA256SUMS.txt
+          cat SHA256SUMS.txt.asc
+
+      - name: Upload SHA256 checksums
+        uses: actions/upload-artifact@v4
+        with:
+          name: sha256sums
+          path: release-packages/SHA256SUMS.txt
+          retention-days: 5
+
+      - name: Update GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          draft: false
+          prerelease: false
+          files: release-packages/*
+
+  publish-docker:
+    name: Publish Docker Image (Multi-Arch)
+    needs:
+      - build-apk
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download Linux musl binaries (amd64)
+        uses: actions/download-artifact@v4
+        with:
+          name: binary-musl-x86_64-unknown-linux-musl
+          path: docker-bin/amd64
+
+      - name: Download Linux musl binaries (arm64)
+        uses: actions/download-artifact@v4
+        with:
+          name: binary-musl-aarch64-unknown-linux-musl
+          path: docker-bin/arm64
+
+      - name: Prepare Docker binaries
+        run: |
+          mkdir -p docker-bin
+          mv docker-bin/amd64/elevenlabs-cli docker-bin/elevenlabs-cli-amd64
+          mv docker-bin/arm64/elevenlabs-cli docker-bin/elevenlabs-cli-arm64
+          chmod +x docker-bin/elevenlabs-cli-amd64 docker-bin/elevenlabs-cli-arm64
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Set up QEMU for multi-arch builds
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: amd64,arm64
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}
+          tags: |
+            type=ref,event=tag
+            type=raw,value=latest
+
+      - name: Build and push multi-architecture Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          platforms: linux/amd64,linux/arm64
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  update-homebrew:
+    name: Update Homebrew Formula
+    needs: finalize-release
+    runs-on: ubuntu-latest
+    env:
+      HOMEBREW_REPO_UPDATE_TOKEN: ${{ secrets.HOMEBREW_REPO_UPDATE_TOKEN }}
+    steps:
+      - name: Checkout homebrew-elevenlabs-cli
+        uses: actions/checkout@v4
+        with:
+          repository: hongkongkiwi/homebrew-elevenlabs-cli
+          token: ${{ secrets.HOMEBREW_REPO_UPDATE_TOKEN }}
+          path: homebrew-tap
+
+      - name: Download SHA256 checksums
+        uses: actions/download-artifact@v4
+        with:
+          name: sha256sums
+          path: homebrew-tmp
+
+      - name: Extract SHA256 checksums for all platforms
+        id: sha256
+        run: |
+          SHA256_X86_64_DARWIN=$(grep -E 'elevenlabs-cli-.*-x86_64-apple-darwin\.tar\.gz' homebrew-tmp/SHA256SUMS.txt | awk '{print $1}')
+          SHA256_AARCH64_DARWIN=$(grep -E 'elevenlabs-cli-.*-aarch64-apple-darwin\.tar\.gz' homebrew-tmp/SHA256SUMS.txt | awk '{print $1}')
+          SHA256_X86_64_LINUX=$(grep -E 'elevenlabs-cli-.*-x86_64-unknown-linux-musl\.tar\.gz' homebrew-tmp/SHA256SUMS.txt | awk '{print $1}')
+          SHA256_AARCH64_LINUX=$(grep -E 'elevenlabs-cli-.*-aarch64-unknown-linux-musl\.tar\.gz' homebrew-tmp/SHA256SUMS.txt | awk '{print $1}')
+
+          for value in "$SHA256_X86_64_DARWIN" "$SHA256_AARCH64_DARWIN" "$SHA256_X86_64_LINUX" "$SHA256_AARCH64_LINUX"; do
+            if [ -z "$value" ]; then
+              echo "Missing SHA256 checksum for one or more platforms" >&2
+              exit 1
+            fi
+          done
+
+          {
+            echo "sha256_x86_64_darwin=${SHA256_X86_64_DARWIN}"
+            echo "sha256_aarch64_darwin=${SHA256_AARCH64_DARWIN}"
+            echo "sha256_x86_64_linux=${SHA256_X86_64_LINUX}"
+            echo "sha256_aarch64_linux=${SHA256_AARCH64_LINUX}"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Update Homebrew formula
+        run: |
+          VERSION_RAW='${{ github.event.inputs.version || github.ref_name }}'
+          VERSION="${VERSION_RAW#v}"
+          SHA256_X86_64_DARWIN="${{ steps.sha256.outputs.sha256_x86_64_darwin }}"
+          SHA256_AARCH64_DARWIN="${{ steps.sha256.outputs.sha256_aarch64_darwin }}"
+          SHA256_X86_64_LINUX="${{ steps.sha256.outputs.sha256_x86_64_linux }}"
+          SHA256_AARCH64_LINUX="${{ steps.sha256.outputs.sha256_aarch64_linux }}"
+
+          cat > homebrew-tap/Formula/elevenlabs-cli.rb << EOF
+          class ElevenlabsCli < Formula
+            desc "Unofficial CLI for ElevenLabs text-to-speech API"
+            homepage "https://github.com/hongkongkiwi/elevenlabs-cli"
+            license "MIT"
+            version "${VERSION}"
+
+            on_macos do
+              on_arm do
+                url "https://github.com/hongkongkiwi/elevenlabs-cli/releases/download/v${VERSION}/elevenlabs-cli-v${VERSION}-aarch64-apple-darwin.tar.gz"
+                sha256 "${SHA256_AARCH64_DARWIN}"
+              end
+              on_intel do
+                url "https://github.com/hongkongkiwi/elevenlabs-cli/releases/download/v${VERSION}/elevenlabs-cli-v${VERSION}-x86_64-apple-darwin.tar.gz"
+                sha256 "${SHA256_X86_64_DARWIN}"
+              end
+            end
+
+            on_linux do
+              on_arm do
+                url "https://github.com/hongkongkiwi/elevenlabs-cli/releases/download/v${VERSION}/elevenlabs-cli-v${VERSION}-aarch64-unknown-linux-musl.tar.gz"
+                sha256 "${SHA256_AARCH64_LINUX}"
+              end
+              on_x86_64 do
+                url "https://github.com/hongkongkiwi/elevenlabs-cli/releases/download/v${VERSION}/elevenlabs-cli-v${VERSION}-x86_64-unknown-linux-musl.tar.gz"
+                sha256 "${SHA256_X86_64_LINUX}"
+              end
+            end
+
+            def install
+              bin.install "elevenlabs-cli"
+            end
+
+            test do
+              assert_match version.to_s, shell_output("#{bin}/elevenlabs-cli --version").strip
+            end
+          end
+          EOF
+
+          cat homebrew-tap/Formula/elevenlabs-cli.rb
+
+      - name: Commit and push changes
+        working-directory: ./homebrew-tap
+        run: |
+          VERSION_RAW='${{ github.event.inputs.version || github.ref_name }}'
+          VERSION="${VERSION_RAW#v}"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git add Formula/elevenlabs-cli.rb README.md
+          if git diff --cached --quiet; then
+            echo "No changes to commit for homebrew formula"
+            exit 0
+          fi
+
+          git commit -m "Update elevenlabs-cli to v${VERSION}"
+          git push
+
+  build-snap:
+    name: Build and Publish Snap
+    needs: build-apk
+    runs-on: ubuntu-latest
+    env:
+      SNAP_STORE_LOGIN: ${{ secrets.SNAP_STORE_LOGIN }}
+    steps:
+      - name: Determine version
+        id: version
+        run: |
+          VERSION_RAW="${{ github.event.inputs.version || github.ref_name }}"
+          VERSION="${VERSION_RAW#v}"
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download musl binary
+        uses: actions/download-artifact@v4
+        with:
+          name: binary-musl-x86_64-unknown-linux-musl
+          path: snap-src
+
+      - name: Create snap directory structure and snapcraft.yaml
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          mkdir -p snap/snap
+          mv snap-src/elevenlabs-cli snap/
+
+          printf '%s\n' \
+            'name: elevenlabs-cli' \
+            'base: core22' \
+            "version: '${VERSION}'" \
+            'summary: Unofficial CLI for ElevenLabs text-to-speech API' \
+            'description: |' \
+            '  ElevenLabs CLI is an unofficial command-line tool for the ElevenLabs' \
+            '  text-to-speech and voice AI platform. Supports TTS, voice cloning,' \
+            '  and more.' \
+            'grade: stable' \
+            'confinement: classic' \
+            'license: MIT' \
+            '' \
+            'parts:' \
+            '  elevenlabs-cli:' \
+            '    plugin: dump' \
+            '    source: .' \
+            '    organize:' \
+            '      elevenlabs-cli: bin/elevenlabs-cli' \
+            '' \
+            'apps:' \
+            '  elevenlabs-cli:' \
+            '    command: bin/elevenlabs-cli' > snap/snap/snapcraft.yaml
+
+          cat snap/snap/snapcraft.yaml
+
+      - name: Build Snap package
+        uses: snapcore/action-build@v1
+        with:
+          path: snap
+          snapcraft-channel: stable
+
+      - name: Upload Snap package to release
+        uses: actions/upload-artifact@v4
+        with:
+          name: elevenlabs-cli.snap
+          path: snap/*.snap
+          retention-days: 5
+
+      - name: Upload Snap to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          draft: false
+          prerelease: false
+          files: snap/*.snap
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish to Snap Store
+        if: ${{ env.SNAP_STORE_LOGIN != '' }}
+        uses: snapcore/action-publish@v1
+        with:
+          snapcraft-channel: stable
+          login: ${{ env.SNAP_STORE_LOGIN }}
+
+  update-scoop:
+    name: Update Scoop Bucket
+    needs: finalize-release
+    runs-on: ubuntu-latest
+    env:
+      SCOOP_REPO_UPDATE_TOKEN: ${{ secrets.SCOOP_REPO_UPDATE_TOKEN }}
+    steps:
+      - name: Determine version
+        id: version
+        run: |
+          VERSION_RAW="${{ github.event.inputs.version || github.ref_name }}"
+          VERSION="${VERSION_RAW#v}"
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout scoop-elevenlabs-cli
+        uses: actions/checkout@v4
+        with:
+          repository: hongkongkiwi/scoop-elevenlabs-cli
+          token: ${{ secrets.SCOOP_REPO_UPDATE_TOKEN }}
+          path: scoop-tap
+
+      - name: Download SHA256 checksums
+        uses: actions/download-artifact@v4
+        with:
+          name: sha256sums
+          path: scoop-tmp
+
+      - name: Extract SHA256 for Windows x86_64
+        id: sha256
+        run: |
+          SHA256_X86_64_WINDOWS=$(grep -E 'elevenlabs-cli-.*-x86_64-pc-windows-msvc\.zip' scoop-tmp/SHA256SUMS.txt | awk '{print $1}')
+
+          if [ -z "$SHA256_X86_64_WINDOWS" ]; then
+            echo "Missing SHA256 checksum for Windows x86_64" >&2
+            exit 1
+          fi
+
+          echo "sha256_x86_64_windows=${SHA256_X86_64_WINDOWS}" >> "$GITHUB_OUTPUT"
+          echo "SHA256 x86_64-windows: $SHA256_X86_64_WINDOWS"
+
+      - name: Update Scoop manifest
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          SHA256_X86_64_WINDOWS="${{ steps.sha256.outputs.sha256_x86_64_windows }}"
+
+          # Update the manifest version
+          sed -i "s/\"version\": \"[0-9]\+\.[0-9]\+\.[0-9]\+\"/\"version\": \"${VERSION}\"/" scoop-tap/elevenlabs-cli.json
+
+          # Update the URL with the correct version
+          sed -i "s|https://github.com/hongkongkiwi/elevenlabs-cli/releases/download/v[0-9.]*/elevenlabs-cli-v[0-9.]*-x86_64-pc-windows-msvc.zip|https://github.com/hongkongkiwi/elevenlabs-cli/releases/download/v${VERSION}/elevenlabs-cli-v${VERSION}-x86_64-pc-windows-msvc.zip|g" scoop-tap/elevenlabs-cli.json
+
+          # Update the hash
+          sed -i "s/\"hash\": \"[a-f0-9]\+\"/\"hash\": \"${SHA256_X86_64_WINDOWS}\"/" scoop-tap/elevenlabs-cli.json
+
+          cat scoop-tap/elevenlabs-cli.json
+
+      - name: Commit and push changes
+        working-directory: ./scoop-tap
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git add elevenlabs-cli.json
+          if git diff --cached --quiet; then
+            echo "No changes to commit for scoop manifest"
+            exit 0
+          fi
+
+          git commit -m "Update elevenlabs-cli to v${VERSION}"
+          git push

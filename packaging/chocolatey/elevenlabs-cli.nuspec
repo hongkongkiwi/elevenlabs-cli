@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd">
+  <metadata>
+    <id>elevenlabs-cli</id>
+    <version>__VERSION__</version>
+    <title>ElevenLabs CLI</title>
+    <authors>ElevenLabs CLI Contributors</authors>
+    <owners>hongkongkiwi</owners>
+    <projectUrl>https://github.com/hongkongkiwi/elevenlabs-cli</projectUrl>
+    <licenseUrl>https://github.com/hongkongkiwi/elevenlabs-cli/blob/main/LICENSE</licenseUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>Unofficial CLI for ElevenLabs text-to-speech API. Provides text-to-speech, voice cloning, voice library access, and MCP server mode.</description>
+    <summary>Unofficial CLI for ElevenLabs text-to-speech API</summary>
+    <copyright>2024 ElevenLabs CLI Contributors</copyright>
+    <tags>elevenlabs tts text-to-speech voice ai audio cli</tags>
+    <packageSourceUrl>https://github.com/hongkongkiwi/elevenlabs-cli</packageSourceUrl>
+    <docsUrl>https://github.com/hongkongkiwi/elevenlabs-cli#readme</docsUrl>
+    <bugTrackerUrl>https://github.com/hongkongkiwi/elevenlabs-cli/issues</bugTrackerUrl>
+  </metadata>
+  <files>
+    <file src="tools\**" target="tools" />
+  </files>
+</package>

@@ -3,14 +3,14 @@ name = "elevenlabs-cli"
 version = "0.1.0"
 edition = "2021"
 authors = ["ElevenLabs CLI Contributors"]
-description = "A comprehensive CLI for ElevenLabs AI audio platform"
+description = "Unofficial CLI for ElevenLabs text-to-speech API"
 license = "MIT"
 repository = "https://github.com/hongkongkiwi/elevenlabs-cli"
 keywords = ["elevenlabs", "tts", "ai", "audio", "cli", "mcp"]
 categories = ["command-line-utilities", "multimedia::audio"]
 
 [[bin]]
-name = "elevenlabs"
+name = "elevenlabs-cli"
 path = "src/main.rs"
 
 [features]
@@ -19,6 +19,8 @@ cli = []
 mcp = ["rmcp", "schemars"]
 # Audio features (optional)
 audio = ["rodio", "cpal"]
+# WebSocket features (for realtime-tts)
+ws = ["elevenlabs_rs/ws"]
 
 [dependencies]
 elevenlabs_rs = "0.6"

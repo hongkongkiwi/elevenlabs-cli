@@ -154,7 +154,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.artifact }}
-          path: target/${{ matrix.target }}/release/elevenlabs*
+          path: target/${{ matrix.target }}/release/elevenlabs-cli*
 
   build-mcp:
     name: Build with MCP
@@ -173,7 +173,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: elevenlabs-linux-x86_64-mcp
-          path: target/release/elevenlabs
+          path: target/release/elevenlabs-cli
 
   release:
     name: Release
