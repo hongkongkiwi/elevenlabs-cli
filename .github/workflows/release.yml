@@ -180,6 +180,7 @@ jobs:
     name: Publish to crates.io
     needs: release
     runs-on: ubuntu-latest
+    continue-on-error: true
     env:
       CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
     steps:
@@ -377,6 +378,7 @@ jobs:
       - build-apk
       - publish-docker
     runs-on: ubuntu-latest
+    continue-on-error: true
     env:
       GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
     steps:
@@ -713,6 +715,7 @@ jobs:
 
       - name: Publish to Snap Store
         if: ${{ env.SNAP_STORE_LOGIN != '' }}
+        continue-on-error: true
         uses: snapcore/action-publish@v1
         with:
           snap: snap/*.snap
