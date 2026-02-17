@@ -185,6 +185,26 @@ fn test_help_interactive() {
 }
 
 #[test]
+fn test_help_update() {
+    assert!(run_cli(&["update", "--help"], 0));
+}
+
+#[test]
+fn test_update_check() {
+    // Update check should work without API key
+    let output = Command::new(cargo_bin())
+        .args(["update", "--check"])
+        .output()
+        .expect("Failed to run CLI");
+
+    // Should succeed (exit code 0)
+    assert!(output.status.success());
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    assert!(stdout.contains("Current version:"));
+    assert!(stdout.contains("Latest version:"));
+}
+
+#[test]
 fn test_voice_fine_tune_help() {
     assert!(run_cli(&["voice", "fine-tune", "--help"], 0));
 }
