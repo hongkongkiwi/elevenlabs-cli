@@ -12,7 +12,7 @@ use crate::audio::audio_io;
 use anyhow::Result;
 use colored::*;
 
-pub async fn execute(args: RealtimeTtsArgs, api_key: &str, assume_yes: bool) -> Result<()> {
+pub async fn execute(args: RealtimeTtsArgs, _api_key: &str, _assume_yes: bool) -> Result<()> {
     if args.text.is_empty() {
         return Err(anyhow::anyhow!("Text cannot be empty"));
     }
@@ -31,7 +31,7 @@ pub async fn execute(args: RealtimeTtsArgs, api_key: &str, assume_yes: bool) -> 
 
     #[cfg(feature = "ws")]
     {
-        execute_ws_tts(args, api_key, assume_yes).await
+        execute_ws_tts(args, _api_key, _assume_yes).await
     }
 }
 
