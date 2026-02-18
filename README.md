@@ -8,10 +8,10 @@
   <a href="https://github.com/hongkongkiwi/elevenlabs-cli/releases">
     <img src="https://img.shields.io/github/v/release/hongkongkiwi/elevenlabs-cli?style=for-the-badge&logo=github&label=release" alt="GitHub Release" />
   </a>
-  <a href="https://crates.io/crates/elevenlabs-cli">
+  <a href="https://lib.rs/crates/elevenlabs-cli">
     <img src="https://img.shields.io/crates/v/elevenlabs-cli?style=for-the-badge&logo=rust" alt="Crates.io Version" />
   </a>
-  <a href="https://crates.io/crates/elevenlabs-cli">
+  <a href="https://lib.rs/crates/elevenlabs-cli">
     <img src="https://img.shields.io/crates/d/elevenlabs-cli?style=for-the-badge&logo=rust" alt="Crates.io Downloads" />
   </a>
   <a href="https://github.com/hongkongkiwi/elevenlabs-cli/actions/workflows/ci.yml">
@@ -23,6 +23,9 @@
 </p>
 
 <p align="center">
+  <a href="https://github.com/hongkongkiwi/action-elevenlabs-cli/blob/main/README.md">
+    <img src="https://img.shields.io/badge/github-action-2088FF?style=flat-square&logo=githubactions&logoColor=white" alt="GitHub Action" />
+  </a>
   <a href="https://github.com/hongkongkiwi/homebrew-elevenlabs-cli/blob/main/README.md">
     <img src="https://img.shields.io/badge/homebrew-tap-FBB040?style=flat-square&logo=homebrew&logoColor=black" alt="Homebrew Tap" />
   </a>
@@ -32,7 +35,7 @@
   <a href="https://github.com/hongkongkiwi/elevenlabs-cli/pkgs/container/elevenlabs-cli">
     <img src="https://img.shields.io/badge/docker-ghcr-2496ED?style=flat-square&logo=docker&logoColor=white" alt="Docker GHCR" />
   </a>
-  <a href="https://github.com/hongkongkiwi/skill-elevenlabs-cli/blob/main/README.md">
+  <a href="https://github.com/hongkongkiwi/elevenlabs-cli-skill/blob/main/README.md">
     <img src="https://img.shields.io/badge/ai%20skill-clawhub-7A5AF8?style=flat-square" alt="ClawHub Skill" />
   </a>
 </p>
@@ -237,9 +240,10 @@ Companion repositories and their README files:
 
 | Repository | Purpose | README |
 | --- | --- | --- |
+| [hongkongkiwi/action-elevenlabs-cli](https://github.com/hongkongkiwi/action-elevenlabs-cli) | GitHub Action wrapper for CI workflows | [Open](https://github.com/hongkongkiwi/action-elevenlabs-cli/blob/main/README.md) |
 | [hongkongkiwi/homebrew-elevenlabs-cli](https://github.com/hongkongkiwi/homebrew-elevenlabs-cli) | Homebrew tap for releases | [Open](https://github.com/hongkongkiwi/homebrew-elevenlabs-cli/blob/main/README.md) |
 | [hongkongkiwi/scoop-elevenlabs-cli](https://github.com/hongkongkiwi/scoop-elevenlabs-cli) | Scoop bucket for Windows installs | [Open](https://github.com/hongkongkiwi/scoop-elevenlabs-cli/blob/main/README.md) |
-| [hongkongkiwi/skill-elevenlabs-cli](https://github.com/hongkongkiwi/skill-elevenlabs-cli) | AI-agent skill integration | [Open](https://github.com/hongkongkiwi/skill-elevenlabs-cli/blob/main/README.md) |
+| [hongkongkiwi/elevenlabs-cli-skill](https://github.com/hongkongkiwi/elevenlabs-cli-skill) | AI-agent skill integration | [Open](https://github.com/hongkongkiwi/elevenlabs-cli-skill/blob/main/README.md) |
 
 ## Resources
 
@@ -253,7 +257,7 @@ Companion repositories and their README files:
 
 - [Report a bug](https://github.com/hongkongkiwi/elevenlabs-cli/issues)
 - [Request a feature](https://github.com/hongkongkiwi/elevenlabs-cli/issues)
-- [Discussions](https://github.com/hongkongkiwi/elevenlabs-cli/discussions)
+- [Releases](https://github.com/hongkongkiwi/elevenlabs-cli/releases)
 
 ## Contributing
 
