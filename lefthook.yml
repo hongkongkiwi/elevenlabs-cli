@@ -1,0 +1,25 @@
+pre-commit:
+  parallel: true
+  commands:
+    format:
+      glob: "*.rs"
+      run: cargo fmt -- --check
+      stage_fixed: true
+
+    clippy:
+      glob: "*.rs"
+      run: cargo clippy --all-targets -- -A dead_code -A clippy::too_many_arguments -A clippy::unnecessary_lazy_evaluations -A clippy::derivable_impls -A clippy::map_unwrap_or -A clippy::needless_borrow -A clippy::needless_return -A clippy::field_reassign_with_default -A clippy::overly_complex_bool_expr -A unused_variables -A unused_mut -A unused_imports -D warnings
+
+    actionlint:
+      glob: ".github/workflows/*.yml"
+      run: actionlint {staged_files}
+
+pre-push:
+  commands:
+    test:
+      run: cargo test --all-features
+
+commit-msg:
+  commands:
+    conventional:
+      run: "grep -qE '^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)' {1}"
