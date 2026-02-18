@@ -454,6 +454,63 @@ jobs:
           prerelease: false
           files: release-packages/*
 
+  virustotal-scan:
+    name: VirusTotal Scan
+    needs: finalize-release
+    runs-on: ubuntu-latest
+    if: ${{ secrets.VIRUSTOTAL_API_KEY != '' }}
+    steps:
+      - name: Download release assets
+        uses: actions/download-artifact@v4
+        with:
+          name: release
+          path: release-assets
+
+      - name: Download all packages
+        uses: actions/download-artifact@v4
+        with:
+          path: packages
+          pattern: elevenlabs-cli.*
+          merge-multiple: false
+
+      - name: Prepare binaries for scanning
+        run: |
+          mkdir -p scan-targets
+          
+          # Copy main binaries
+          for f in release-assets/elevenlabs-cli-*; do
+            [ -f "$f" ] && cp "$f" scan-targets/
+          done
+          
+          # Copy deb and apk packages
+          for dir in packages/*; do
+            if [ -d "$dir" ]; then
+              for f in "$dir"/*.deb "$dir"/*.apk; do
+                [ -f "$f" ] && cp "$f" scan-targets/
+              done
+            fi
+          done
+          
+          ls -la scan-targets/
+
+      - name: VirusTotal Scan
+        uses: crazy-max/ghaction-virustotal@v4
+        with:
+          vt_api_key: ${{ secrets.VIRUSTOTAL_API_KEY }}
+          files: |
+            scan-targets/*
+          update_release_body: true
+        continue-on-error: true
+
+      - name: Upload scan results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: virustotal-results
+          path: virustotal-*.json
+          retention-days: 30
+        continue-on-error: true
+
   publish-docker:
     name: Publish Docker Image (Multi-Arch)
     needs:
