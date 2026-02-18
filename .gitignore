@@ -1,4 +1,11 @@
-/target
+# Rust build artifacts
+/target/
+*.pdb
+*.profraw
+*.profdata
+coverage/
+lcov.info
+cargo-tarpaulin.html
 
 # IDE/Editor
 .idea/
@@ -16,9 +23,16 @@ Thumbs.db
 .playwright-mcp/
 .serena/
 .aider*
+telemetry-id
 
-# Build artifacts
-*.pdb
+# Local release/packaging scratch space
+/binaries/
+/release/
+/release-assets/
+/release-packages/
+/homebrew-tmp/
+/scoop-tmp/
+/apk-build/
 
 # Environment
 .env
