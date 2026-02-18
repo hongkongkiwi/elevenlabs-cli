@@ -7,7 +7,7 @@ coverage/
 lcov.info
 cargo-tarpaulin.html
 
-# IDE/Editor
+# Editor / IDE
 .idea/
 .vscode/
 *.swp
@@ -18,7 +18,7 @@ cargo-tarpaulin.html
 .DS_Store
 Thumbs.db
 
-# Tool-specific
+# Tool-specific local state
 .omd/
 .playwright-mcp/
 .serena/
@@ -34,7 +34,13 @@ telemetry-id
 /scoop-tmp/
 /apk-build/
 
-# Environment
+# Local env/config
 .env
 .env.*
 !.env.example
+.envrc
+.direnv/
+
+# Patch/rebase leftovers
+*.orig
+*.rej
