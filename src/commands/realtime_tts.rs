@@ -12,7 +12,7 @@ use crate::audio::audio_io;
 use anyhow::Result;
 use colored::*;
 
-pub async fn execute(args: RealtimeTtsArgs, _api_key: &str, _assume_yes: bool) -> Result<()> {
+pub async fn execute(args: RealtimeTtsArgs, api_key: &str, assume_yes: bool) -> Result<()> {
     if args.text.is_empty() {
         return Err(anyhow::anyhow!("Text cannot be empty"));
     }
@@ -37,8 +37,12 @@ pub async fn execute(args: RealtimeTtsArgs, _api_key: &str, _assume_yes: bool) -
 
 #[cfg(feature = "ws")]
 async fn execute_ws_tts(args: RealtimeTtsArgs, api_key: &str, assume_yes: bool) -> Result<()> {
-    use futures_util::StreamExt;
+    use crate::output::print_success;
+    use crate::utils::{confirm_overwrite, generate_output_filename, write_bytes_to_file};
+    use anyhow::Context;
+    use futures_util::{SinkExt, StreamExt};
     use std::time::Duration;
+    use tokio_tungstenite::{connect_async, tungstenite::protocol::Message};
 
     // Build WebSocket URL with API key
     let base_url = "wss://api.elevenlabs.io/v1/text-to-speech";
