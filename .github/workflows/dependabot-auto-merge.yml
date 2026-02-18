@@ -1,14 +1,9 @@
-name: Dependabot Auto-Merge
+name: Dependabot Auto-merge
 
 on:
-  pull_request:
-    types: [opened, synchronize, reopened]
+  pull_request_target:
+    types: [opened, reopened, synchronize, ready_for_review]
   workflow_dispatch:
-    inputs:
-      pr_number:
-        description: 'PR number to process'
-        required: true
-        type: string
 
 permissions:
   contents: write
@@ -16,46 +11,29 @@ permissions:
 
 jobs:
   auto-merge:
+    if: ${{ github.event.pull_request.user.login == 'dependabot[bot]' }}
     runs-on: ubuntu-latest
-    if: ${{ github.actor == 'dependabot[bot]' || github.event.pull_request.user.login == 'dependabot[bot]' }}
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Fetch Dependabot metadata
-        id: metadata
-        uses: dependabot/fetch-metadata@v2
-        with:
-          github-token: "${{ secrets.GITHUB_TOKEN }}"
-
-      - name: Wait for CI to pass
-        uses: lewagon/wait-on-check-action@v1.5.0
-        with:
-          ref: ${{ github.event.pull_request.head.sha || github.sha }}
-          check-name: 'Test'
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-          wait-interval: 20
-          allowed-conclusions: success
-        continue-on-error: true
-
-      - name: Approve and auto-merge minor/patch updates
-        if: |
-          steps.metadata.outputs.update-type == 'version-update:semver-minor' ||
-          steps.metadata.outputs.update-type == 'version-update:semver-patch'
-        run: |
-          gh pr review --approve "$PR_URL"
-          gh pr merge --auto --squash "$PR_URL"
+      - name: Fetch PR state
+        id: pr
         env:
-          PR_URL: ${{ github.event.pull_request.html_url }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Auto-merge GitHub Actions updates
-        if: steps.metadata.outputs.package-ecosystem == 'github_actions'
         run: |
-          gh pr review --approve "$PR_URL"
-          gh pr merge --auto --squash "$PR_URL"
+          pr_json=$(gh api repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }})
+          echo "mergeable_state=$(echo \"$pr_json\" | jq -r '.mergeable_state // \"unknown\"')" >> "$GITHUB_OUTPUT"
+          echo "draft=$(echo \"$pr_json\" | jq -r '.draft')" >> "$GITHUB_OUTPUT"
+
+      - name: Ask Dependabot to rebase conflicted/behind PRs
+        if: ${{ steps.pr.outputs.draft != 'true' && (steps.pr.outputs.mergeable_state == 'dirty' || steps.pr.outputs.mergeable_state == 'behind') }}
         env:
-          PR_URL: ${{ github.event.pull_request.html_url }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr comment ${{ github.event.pull_request.number }} --body "@dependabot rebase"
+
+      - name: Approve and enable auto-merge
+        if: ${{ steps.pr.outputs.draft != 'true' && steps.pr.outputs.mergeable_state != 'dirty' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr review ${{ github.event.pull_request.number }} --approve || true
+          gh pr merge ${{ github.event.pull_request.number }} --auto --squash
