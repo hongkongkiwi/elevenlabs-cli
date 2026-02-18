@@ -102,7 +102,10 @@ fn is_arch_linux() -> bool {
 }
 
 async fn fetch_latest_version() -> Result<String> {
-    let url = format!("https://api.github.com/repos/{}/releases/latest", GITHUB_REPO);
+    let url = format!(
+        "https://api.github.com/repos/{}/releases/latest",
+        GITHUB_REPO
+    );
 
     let client = reqwest::Client::builder()
         .user_agent("elevenlabs-cli")
@@ -146,7 +149,10 @@ fn update_via_homebrew() -> Result<()> {
 
 fn update_via_cargo() -> Result<()> {
     println!("{} Detected Cargo installation", "ℹ".blue());
-    println!("  Running: {}", "cargo install elevenlabs-cli --force".cyan());
+    println!(
+        "  Running: {}",
+        "cargo install elevenlabs-cli --force".cyan()
+    );
 
     let status = Command::new("cargo")
         .args(["install", "elevenlabs-cli", "--force"])
@@ -180,9 +186,7 @@ fn update_via_snap() -> Result<()> {
 
 fn update_via_aur() -> Result<()> {
     println!("{} Detected AUR installation (Arch Linux)", "ℹ".blue());
-    println!(
-        "  Please use your AUR helper to update, e.g.:",
-    );
+    println!("  Please use your AUR helper to update, e.g.:",);
     println!("    yay -S elevenlabs-cli");
     println!("    paru -S elevenlabs-cli");
     println!("    or: pacman -Syu");
@@ -200,10 +204,7 @@ async fn update_via_binary(exe_path: &PathBuf, version: &str) -> Result<()> {
     // Download the binary - naming convention: elevenlabs-cli-v{version}-{arch}-{os}.tar.gz
     // For Windows, use .zip instead of .tar.gz
     let extension = if cfg!(windows) { "zip" } else { "tar.gz" };
-    let binary_name = format!(
-        "elevenlabs-cli-v{}-{}-{}.{}",
-        version, arch, os, extension
-    );
+    let binary_name = format!("elevenlabs-cli-v{}-{}-{}.{}", version, arch, os, extension);
     let download_url = format!(
         "https://github.com/{}/releases/download/v{}/{}",
         GITHUB_REPO, version, binary_name
@@ -234,10 +235,7 @@ async fn update_via_binary(exe_path: &PathBuf, version: &str) -> Result<()> {
     Ok(())
 }
 
-async fn download_and_replace(
-    response: reqwest::Response,
-    exe_path: &PathBuf,
-) -> Result<()> {
+async fn download_and_replace(response: reqwest::Response, exe_path: &PathBuf) -> Result<()> {
     use tempfile::tempdir;
 
     let bytes = response
