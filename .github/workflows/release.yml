@@ -458,15 +458,28 @@ jobs:
     name: VirusTotal Scan
     needs: finalize-release
     runs-on: ubuntu-latest
-    if: ${{ secrets.VIRUSTOTAL_API_KEY != '' }}
+    env:
+      VT_API_KEY: ${{ secrets.VIRUSTOTAL_API_KEY }}
     steps:
+      - name: Check for API key
+        id: check
+        run: |
+          if [[ -n "${{ env.VT_API_KEY }}" ]]; then
+            echo "has_key=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_key=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::VIRUSTOTAL_API_KEY not set - skipping VirusTotal scan"
+          fi
+
       - name: Download release assets
+        if: steps.check.outputs.has_key == 'true'
         uses: actions/download-artifact@v4
         with:
           name: release
           path: release-assets
 
       - name: Download all packages
+        if: steps.check.outputs.has_key == 'true'
         uses: actions/download-artifact@v4
         with:
           path: packages
@@ -474,6 +487,7 @@ jobs:
           merge-multiple: false
 
       - name: Prepare binaries for scanning
+        if: steps.check.outputs.has_key == 'true'
         run: |
           mkdir -p scan-targets
           
@@ -494,6 +508,7 @@ jobs:
           ls -la scan-targets/
 
       - name: VirusTotal Scan
+        if: steps.check.outputs.has_key == 'true'
         uses: crazy-max/ghaction-virustotal@v4
         with:
           vt_api_key: ${{ secrets.VIRUSTOTAL_API_KEY }}
@@ -503,7 +518,7 @@ jobs:
         continue-on-error: true
 
       - name: Upload scan results
-        if: always()
+        if: always() && steps.check.outputs.has_key == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: virustotal-results
