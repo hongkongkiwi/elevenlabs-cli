@@ -1,382 +1,157 @@
-# ElevenLabs CLI
+<h1 align="center">ElevenLabs CLI</h1>
 
-> **⚠️ Unofficial CLI**: This is an independent, community-built CLI client. It is not officially released by ElevenLabs.
+<p align="center">
+  The community-built command line for ElevenLabs AI audio workflows.
+</p>
 
-A comprehensive command-line interface for the ElevenLabs AI audio platform. Generate speech, transcribe audio, clone voices, manage agents, and more - all from your terminal.
+<p align="center">
+  <a href="https://github.com/hongkongkiwi/elevenlabs-cli/releases">
+    <img src="https://img.shields.io/github/v/release/hongkongkiwi/elevenlabs-cli?style=for-the-badge&logo=github&label=release" alt="GitHub Release" />
+  </a>
+  <a href="https://crates.io/crates/elevenlabs-cli">
+    <img src="https://img.shields.io/crates/v/elevenlabs-cli?style=for-the-badge&logo=rust" alt="Crates.io Version" />
+  </a>
+  <a href="https://crates.io/crates/elevenlabs-cli">
+    <img src="https://img.shields.io/crates/d/elevenlabs-cli?style=for-the-badge&logo=rust" alt="Crates.io Downloads" />
+  </a>
+  <a href="https://github.com/hongkongkiwi/elevenlabs-cli/actions/workflows/ci.yml">
+    <img src="https://img.shields.io/github/actions/workflow/status/hongkongkiwi/elevenlabs-cli/ci.yml?branch=main&style=for-the-badge&logo=github&label=ci" alt="CI" />
+  </a>
+  <a href="https://opensource.org/licenses/MIT">
+    <img src="https://img.shields.io/badge/license-MIT-3DA639?style=for-the-badge" alt="MIT License" />
+  </a>
+</p>
 
-> **Official Documentation**: This CLI wraps the [ElevenLabs API](https://elevenlabs.io/docs/api-reference). For detailed API documentation, visit the official [ElevenLabs Docs](https://elevenlabs.io/docs).
+<p align="center">
+  <a href="https://github.com/hongkongkiwi/homebrew-elevenlabs-cli/blob/main/README.md">
+    <img src="https://img.shields.io/badge/homebrew-tap-FBB040?style=flat-square&logo=homebrew&logoColor=black" alt="Homebrew Tap" />
+  </a>
+  <a href="https://github.com/hongkongkiwi/scoop-elevenlabs-cli/blob/main/README.md">
+    <img src="https://img.shields.io/badge/scoop-bucket-4A89DC?style=flat-square" alt="Scoop Bucket" />
+  </a>
+  <a href="https://github.com/hongkongkiwi/elevenlabs-cli/pkgs/container/elevenlabs-cli">
+    <img src="https://img.shields.io/badge/docker-ghcr-2496ED?style=flat-square&logo=docker&logoColor=white" alt="Docker GHCR" />
+  </a>
+  <a href="https://github.com/hongkongkiwi/skill-elevenlabs-cli/blob/main/README.md">
+    <img src="https://img.shields.io/badge/ai%20skill-clawhub-7A5AF8?style=flat-square" alt="ClawHub Skill" />
+  </a>
+</p>
 
-## Features
+<p align="center">
+  <a href="#installation">Install</a>
+  ·
+  <a href="#quick-start">Quick Start</a>
+  ·
+  <a href="#common-workflows">Workflows</a>
+  ·
+  <a href="#mcp-server-mode">MCP</a>
+  ·
+  <a href="#ecosystem">Ecosystem</a>
+  ·
+  <a href="#support">Support</a>
+</p>
 
-- **Text-to-Speech**: Convert text to natural speech with 100+ voices
-- **Speech-to-Text**: Transcribe audio with speaker diarization and timestamps
-- **Voice Cloning**: Clone voices from audio samples
-- **Sound Effects**: Generate sound effects from text descriptions
-- **Voice Changer**: Transform voice in audio files
-- **Dubbing**: Translate and dub video/audio to other languages
-- **Audio Isolation**: Remove background noise from audio
-- **Agents**: Create and manage conversational AI agents
-- **Dialogue**: Generate multi-voice dialogues
-- **MCP Support**: Use as an MCP server for AI assistants
+> [!WARNING]
+> This is an independent, community-built CLI and is not an official ElevenLabs release. For official platform docs, visit [elevenlabs.io/docs](https://elevenlabs.io/docs).
+
+## Why ElevenLabs CLI
+
+- Unified interface for TTS, STT, voice cloning, dubbing, and audio tooling
+- Script-friendly output (`--json`) for automation and CI pipelines
+- MCP server mode for AI assistants with tool filtering and safety controls
+- Multi-channel distribution (Homebrew, Scoop, Cargo, Docker, source)
 
 ## Installation
 
-### From Source
+| Channel | Command |
+| --- | --- |
+| Homebrew (macOS/Linux) | `brew tap hongkongkiwi/elevenlabs-cli && brew install elevenlabs-cli` |
+| Scoop (Windows) | `scoop bucket add elevenlabs-cli https://github.com/hongkongkiwi/scoop-elevenlabs-cli && scoop install elevenlabs-cli` |
+| Cargo (all platforms) | `cargo install elevenlabs-cli` |
+| Cargo with MCP feature | `cargo install elevenlabs-cli --features mcp` |
+| Docker | `docker run --rm -e ELEVENLABS_API_KEY=your-key ghcr.io/hongkongkiwi/elevenlabs-cli tts "Hello"` |
+| From source | `git clone https://github.com/hongkongkiwi/elevenlabs-cli.git && cd elevenlabs-cli && cargo install --path .` |
+
+## Quick Start
 
 ```bash
-# Clone the repository
-git clone https://github.com/hongkongkiwi/elevenlabs-cli.git
-cd elevenlabs-cli
+# 1) Set API key (or use: elevenlabs-cli config set api_key "..." )
+export ELEVENLABS_API_KEY="your-api-key"
 
-# Build and install
-cargo install --path .
+# 2) Generate speech
+elevenlabs-cli tts "Hello from ElevenLabs CLI" --output hello.mp3
+
+# 3) List voices
+elevenlabs-cli voice list
+
+# 4) Transcribe audio
+elevenlabs-cli stt audio.mp3
 ```
 
-### With MCP Support
+> [!TIP]
+> Examples use `elevenlabs-cli` (the default binary name). If you want a shorter command, add an alias such as `alias elevenlabs='elevenlabs-cli'`.
+
+## Feature Surface
+
+| Area | Commands |
+| --- | --- |
+| Speech | `tts`, `tts-stream`, `tts-timestamps`, `realtime-tts`, `stt` |
+| Voice | `voice`, `voice-changer`, `voice-design`, `library`, `samples`, `pronunciation` |
+| Content | `sfx`, `dialogue`, `music`, `dub`, `isolate`, `audio-native` |
+| Agent Platform | `agent`, `converse`, `tools`, `projects`, `knowledge`, `rag`, `workspace` |
+| Platform Ops | `history`, `usage`, `models`, `user`, `config`, `webhook`, `update`, `interactive` |
+| Developer UX | `completions`, global `--json`, optional `mcp` mode |
+
+## Common Workflows
+
+### Text to Speech
 
 ```bash
-cargo install --path . --features mcp
+elevenlabs-cli tts "Ship high-quality audio from the terminal" --voice Brian --output narration.mp3
 ```
 
-## Configuration
-
-### API Key
-
-Set your ElevenLabs API key via environment variable:
+### Speech to Text with Speaker Diarization
 
 ```bash
-export ELEVENLABS_API_KEY="your-api-key-here"
+elevenlabs-cli stt meeting.mp3 --diarize --num-speakers 3
 ```
 
-> **Get your API key**: [ElevenLabs API Keys Settings](https://elevenlabs.io/app/settings/api-keys)
-
-Or pass it with each command:
+### Voice Cloning
 
 ```bash
-elevenlabs --api-key "your-api-key" tts "Hello, world!"
-```
-
-Or save it to config:
-
-```bash
-elevenlabs config set api_key "your-api-key"
-```
-
-### Config File
-
-Config is stored at `~/.config/elevenlabs-cli/config.toml`:
-
-```toml
-api_key = "your-api-key"
-default_voice = "Brian"
-default_model = "eleven_multilingual_v2"
-default_output_format = "mp3_44100_128"
-
-# MCP Server settings (optional)
-[mcp]
-enable_tools = "tts,stt"           # Only enable specific tools
-disable_tools = "agents,phone"    # Disable specific tools
-disable_admin = false              # Disable delete, create, update operations
-disable_destructive = false        # Disable only delete operations
-read_only = false                  # Read-only mode
-```
-
-## Usage
-
-### Text-to-Speech
-
-> **API Docs**: [Text-to-Speech API Reference](https://elevenlabs.io/docs/api-reference/text-to-speech)
-
-```bash
-# Basic usage
-elevenlabs tts "Hello, world!"
-
-# With specific voice and model
-elevenlabs tts "Hello, world!" --voice Brian --model eleven_multilingual_v2
-
-# Save to file
-elevenlabs tts "Hello, world!" --output speech.mp3
-
-# Read from file
-elevenlabs tts --file input.txt --output speech.mp3
-
-# With voice settings
-elevenlabs tts "Hello, world!" --stability 0.5 --similarity-boost 0.75
-
-# Play after generation (macOS)
-elevenlabs tts "Hello, world!" --play
-```
-
-### Speech-to-Text
-
-> **API Docs**: [Speech-to-Text API Reference](https://elevenlabs.io/docs/api-reference/speech-to-text)
-
-```bash
-# Transcribe audio file
-elevenlabs stt audio.mp3
-
-# With speaker diarization
-elevenlabs stt audio.mp3 --diarize --num-speakers 2
-
-# Output as SRT subtitles
-elevenlabs stt audio.mp3 --format srt --output subtitles.srt
-
-# With timestamps
-elevenlabs stt audio.mp3 --timestamps word
-```
-
-### Voice Management
-
-> **API Docs**: [Voices API Reference](https://elevenlabs.io/docs/api-reference/voices)
-
-```bash
-# List all voices
-elevenlabs voice list
-
-# Get voice details
-elevenlabs voice get <voice-id>
-
-# Clone a voice
-elevenlabs voice clone --name "My Voice" --samples sample1.mp3,sample2.mp3
-
-# Clone from directory
-elevenlabs voice clone --name "My Voice" --samples-dir ./samples/
-
-# Delete a voice
-elevenlabs voice delete <voice-id>
+elevenlabs-cli voice clone --name "My Voice" --samples voice1.mp3,voice2.mp3
 ```
 
 ### Sound Effects
 
-> **API Docs**: [Sound Effects API Reference](https://elevenlabs.io/docs/api-reference/sound-effects)
-
 ```bash
-# Generate sound effect
-elevenlabs sfx "A thunderstorm with heavy rain"
-
-# With specific duration
-elevenlabs sfx "A car engine revving" --duration 5.0
-
-# Save to file
-elevenlabs sfx "Door bell ringing" --output doorbell.mp3
+elevenlabs-cli sfx "A soft UI notification" --duration 3 --output notification.mp3
 ```
 
-### Voice Changer
-
-> **API Docs**: [Voice Changer API Reference](https://elevenlabs.io/docs/api-reference/voice-changer)
+### JSON for Automation
 
 ```bash
-# Transform voice in audio file
-elevenlabs voice-changer input.mp3 --voice Brian --output transformed.mp3
+elevenlabs-cli --json voice list | jq '.[0].voice_id'
 ```
 
-### Audio Isolation
+## MCP Server Mode
 
-> **API Docs**: [Audio Isolation API Reference](https://elevenlabs.io/docs/api-reference/audio-isolation)
+Start the server:
 
 ```bash
-# Remove background noise
-elevenlabs isolate noisy_audio.mp3 --output clean_audio.mp3
+elevenlabs-cli mcp
 ```
 
-### Dubbing
+> [!NOTE]
+> `mcp` is available in builds that include the `mcp` feature (for example, `cargo install elevenlabs-cli --features mcp`).
 
-> **API Docs**: [Dubbing API Reference](https://elevenlabs.io/docs/api-reference/dubbing)
-
-```bash
-# Create dubbing project
-elevenlabs dub create --file video.mp4 --source-lang en --target-lang es
-
-# Check status
-elevenlabs dub status <dubbing-id>
-
-# Download dubbed file
-elevenlabs dub download <dubbing-id> --output dubbed.mp4
-```
-
-### Agents
-
-> **API Docs**: [Conversational AI API Reference](https://elevenlabs.io/docs/api-reference/conversational-ai)
-
-```bash
-# List agents
-elevenlabs agent list
-
-# Create agent
-elevenlabs agent create --name "Support Bot" --voice-id <voice-id> --first-message "Hello! How can I help?"
-
-# Get agent details
-elevenlabs agent get <agent-id>
-
-# List agent summaries (lightweight)
-elevenlabs agent summaries
-
-# Manage branches
-elevenlabs agent branches <agent-id>
-elevenlabs agent rename-branch <agent-id> <branch-id> --name "production"
-
-# Batch calls
-elevenlabs agent batch-list
-elevenlabs agent batch-status <batch-id>
-elevenlabs agent batch-delete <batch-id>
-```
-
-### Dialogue (Multi-Voice)
-
-> **API Docs**: [Text-to-Dialogue API Reference](https://elevenlabs.io/docs/api-reference/text-to-dialogue)
-
-```bash
-# Create dialogue with multiple voices
-elevenlabs dialogue --inputs "Hello!:voice1,Hi there!:voice2,How are you?:voice1"
-
-# With specific model
-elevenlabs dialogue --inputs "text1:voice1,text2:voice2" --model eleven_v3
-
-# Save to file
-elevenlabs dialogue --inputs "..." --output dialogue.mp3
-```
-
-### Knowledge Base
-
-> **API Docs**: [Knowledge Base API Reference](https://elevenlabs.io/docs/api-reference/knowledge-base)
-
-```bash
-# List documents
-elevenlabs knowledge list
-
-# Add from URL
-elevenlabs knowledge add-from-url --url https://example.com/doc --name "Documentation"
-
-# Add from text
-elevenlabs knowledge add-from-text --text "Content here" --name "My Doc"
-
-# Add from file
-elevenlabs knowledge add-from-file --file document.pdf --name "PDF Doc"
-
-# Delete document
-elevenlabs knowledge delete <document-id>
-```
-
-### Webhooks
-
-> **API Docs**: [Webhooks API Reference](https://elevenlabs.io/docs/api-reference/webhooks)
-
-```bash
-# List webhooks
-elevenlabs webhook list
-
-# Create webhook
-elevenlabs webhook create --name "My Webhook" --url https://example.com/webhook --events voice.created,voice.deleted
-```
-
-### History
-
-> **API Docs**: [History API Reference](https://elevenlabs.io/docs/api-reference/history)
-
-```bash
-# List generation history
-elevenlabs history list
-
-# Get history item details
-elevenlabs history get <history-item-id>
-
-# Download audio from history
-elevenlabs history download <history-item-id> --output audio.mp3
-
-# Delete history item
-elevenlabs history delete <history-item-id>
-```
-
-### Usage Statistics
-
-> **API Docs**: [Usage API Reference](https://elevenlabs.io/docs/api-reference/usage)
-
-```bash
-# Get usage stats
-elevenlabs usage stats
-
-# With date range
-elevenlabs usage stats --start 1704067200 --end 1706745600
-
-# With breakdown
-elevenlabs usage stats --breakdown voice
-```
-
-### Workspace
-
-> **API Docs**: [Workspace API Reference](https://elevenlabs.io/docs/api-reference/workspace)
-
-```bash
-# Get workspace info
-elevenlabs workspace info
-
-# List pending invites
-elevenlabs workspace invites
-
-# Invite member
-elevenlabs workspace invite user@example.com --role editor
-
-# Revoke invite
-elevenlabs workspace revoke user@example.com
-```
-
-## MCP Server
-
-The CLI can run as an MCP (Model Context Protocol) server, exposing all ElevenLabs functionality to AI assistants like Claude, OpenCode, Cursor, and others.
-
-> **Learn more**: [Model Context Protocol](https://modelcontextprotocol.io/)
-
-```bash
-# Run as MCP server (requires --features mcp)
-elevenlabs mcp
-
-# Enable only specific tools
-elevenlabs mcp --enable-tools tts,stt,voice
-
-# Disable specific tools
-elevenlabs mcp --disable-tools agents,phone
-
-# Disable all administrative operations (delete, create, update)
-elevenlabs mcp --disable-admin
-
-# Disable only destructive operations (delete only)
-elevenlabs mcp --disable-destructive
-
-# Read-only mode (same as --disable-admin)
-elevenlabs mcp --read-only
-```
-
-This allows AI assistants to:
-- Generate speech and sound effects
-- Transcribe audio
-- Manage voices and agents
-- Access all ElevenLabs API features (80+ tools)
-
-### MCP Tool Filtering
-
-You can control which tools are available in the MCP server:
-
-- `--enable-tools`: Comma-separated list of tools to enable (others disabled)
-- `--disable-tools`: Comma-separated list of tools to disable
-- `--disable-admin`: Disable all administrative operations (delete, create, update)
-- `--disable-destructive`: Disable only destructive operations (delete only)
-- `--read-only`: Read-only mode (same as --disable-admin)
-
-Administrative tools blocked by `--disable-admin`:
-- Voice: delete_voice, clone_voice, edit_voice_settings, share_voice
-- Agents: create_agent, update_agent, delete_agent, duplicate_agent
-- Knowledge: add_knowledge, delete_knowledge, create_rag, delete_rag, rebuild_rag
-- And many more...
-
-### MCP Configuration
-
-Add to your MCP client configuration:
+Minimal client config:
 
 ```json
 {
   "mcpServers": {
     "elevenlabs": {
-      "command": "elevenlabs",
+      "command": "elevenlabs-cli",
       "args": ["mcp"],
       "env": {
         "ELEVENLABS_API_KEY": "your-api-key"
@@ -386,128 +161,109 @@ Add to your MCP client configuration:
 }
 ```
 
-### Available MCP Tools
+Security options:
 
-The MCP server exposes 80+ tools organized by category:
+```bash
+elevenlabs-cli mcp --enable-tools tts,stt,voice
+elevenlabs-cli mcp --disable-admin
+elevenlabs-cli mcp --disable-destructive
+elevenlabs-cli mcp --read-only
+```
 
-| Category | Tools |
-|----------|-------|
-| **TTS & Audio** | `text_to_speech`, `speech_to_text`, `generate_sfx`, `audio_isolation`, `voice_changer` |
-| **Voice Management** | `list_voices`, `get_voice`, `delete_voice`, `clone_voice`, `voice_settings`, `edit_voice_settings`, `create_voice_design`, `get_voice_design`, `start_voice_fine_tune`, `get_voice_fine_tune_status`, `cancel_voice_fine_tune`, `share_voice`, `get_similar_voices` |
-| **Dubbing** | `create_dubbing`, `get_dubbing_status`, `delete_dubbing` |
-| **History** | `list_history`, `get_history_item`, `delete_history_item`, `history_feedback`, `download_history` |
-| **Agents** | `list_agents`, `get_agent_summaries`, `create_agent`, `get_agent`, `update_agent`, `delete_agent`, `agent_branches`, `batch_list` |
-| **Conversation** | `converse_chat`, `list_conversations`, `get_conversation`, `get_signed_url`, `get_conversation_token`, `delete_conversation`, `get_conversation_audio` |
-| **Knowledge & RAG** | `list_knowledge`, `add_knowledge`, `delete_knowledge`, `create_rag`, `get_rag_status`, `delete_rag`, `rebuild_rag`, `get_rag_index_status` |
-| **Projects** | `list_projects`, `get_project`, `delete_project`, `convert_project`, `list_project_snapshots`, `get_project_audio` |
-| **Music** | `generate_music`, `list_music`, `get_music`, `download_music`, `delete_music` |
-| **Phone** | `list_phones`, `get_phone`, `import_phone`, `update_phone`, `delete_phone`, `test_phone_call` |
-| **Workspace** | `workspace_info`, `list_workspace_members`, `list_workspace_invites`, `invite_workspace_member`, `revoke_workspace_invite`, `list_workspace_api_keys`, `list_secrets`, `add_secret`, `delete_secret`, `share_workspace` |
-| **Other** | `list_models`, `get_model_rates`, `get_usage`, `get_user_info`, `get_user_subscription`, `list_webhooks`, `create_webhook`, `delete_webhook`, `list_library_voices`, `list_library_collections`, `list_pronunciations`, `add_pronunciation`, `delete_pronunciation`, `list_samples`, `delete_sample`, `list_tools`, `get_tool`, `delete_tool`, `list_audio_native`, `get_audio_native`, `create_audio_native` |
+## Configuration
+
+Default config path: `~/.config/elevenlabs-cli/config.toml`
+
+```toml
+api_key = "your-api-key"
+default_voice = "Brian"
+default_model = "eleven_multilingual_v2"
+default_output_format = "mp3_44100_128"
+
+[mcp]
+enable_tools = "tts,stt"
+disable_tools = "agents"
+disable_admin = false
+read_only = false
+```
+
+## Available Models
+
+| Model | Best For |
+| --- | --- |
+| `eleven_multilingual_v2` | High quality synthesis across many languages |
+| `eleven_flash_v2_5` | Lowest latency |
+| `eleven_turbo_v2_5` | Balanced speed and quality |
+| `eleven_v3` | Expressive and emotional speech |
+| `scribe_v1` | Higher-accuracy speech-to-text |
+| `scribe_v1_base` | Faster, lower-cost speech-to-text |
 
 ## Output Formats
 
-Supported audio output formats:
+| Format | Use Case |
+| --- | --- |
+| `mp3_44100_128` | Default, broadly compatible |
+| `mp3_44100_192` | Higher quality MP3 |
+| `wav_44100` | Editing and mastering |
+| `pcm_16000` | Telephony and real-time systems |
+| `opus_48000_128` | Streaming and WebRTC |
+| `ulaw_8000` | Legacy telephony |
 
-| Format | Description | Docs |
-|--------|-------------|------|
-| `mp3_44100_128` | MP3 44.1kHz 128kbps (default) | [Audio Formats](https://elevenlabs.io/docs/api-reference/text-to-speech#output-formats) |
-| `mp3_44100_192` | MP3 44.1kHz 192kbps | |
-| `pcm_16000` | PCM 16kHz | |
-| `pcm_22050` | PCM 22.05kHz | |
-| `pcm_44100` | PCM 44.1kHz | |
-| `wav_8000` | WAV 8kHz | |
-| `wav_16000` | WAV 16kHz | |
-| `wav_44100` | WAV 44.1kHz | |
-| `opus_48000_64` | Opus 48kHz 64kbps | |
-| `opus_48000_128` | Opus 48kHz 128kbps | |
-| `ulaw_8000` | μ-law 8kHz | |
+## Command Reference
 
-## Models
+Use `elevenlabs-cli --help` and `elevenlabs-cli <command> --help` for details.
 
-| Model | Use Case | Docs |
-|-------|----------|------|
-| `eleven_multilingual_v2` | Best quality, 29 languages | [Models Guide](https://elevenlabs.io/docs/models) |
-| `eleven_flash_v2_5` | Lowest latency | |
-| `eleven_turbo_v2_5` | Balanced quality and speed | |
-| `eleven_v3` | Expressive, emotional speech | |
-| `scribe_v1` | Speech-to-text transcription | [STT Models](https://elevenlabs.io/docs/speech-to-text/models) |
-| `scribe_v1_base` | Faster, lower cost STT | |
+| Command | Description |
+| --- | --- |
+| `tts` | Text-to-speech synthesis |
+| `stt` | Speech-to-text transcription |
+| `voice` | Voice management (list, clone, edit, delete) |
+| `library` | Shared/community voice library |
+| `isolate` | Background-noise removal |
+| `voice-changer` | Speech-to-speech voice transformation |
+| `dub` | Dubbing and translation workflows |
+| `dialogue` | Multi-speaker dialogue generation |
+| `sfx` | Sound effect generation |
+| `music` | Music generation |
+| `agent`, `converse`, `tools`, `projects` | Conversational/agent features |
+| `knowledge`, `rag`, `workspace` | Knowledge and workspace management |
+| `history`, `usage`, `models`, `user` | Account/model/runtime information |
+| `config`, `webhook`, `update`, `interactive`, `completions` | Tooling and operations |
+| `mcp` | Model Context Protocol server mode |
 
-## Shell Completion
+## Ecosystem
 
-Generate shell completions:
+Companion repositories and their README files:
 
-```bash
-# Bash
-elevenlabs completions bash > /etc/bash_completion.d/elevenlabs
-
-# Zsh
-elevenlabs completions zsh > "${fpath[1]}/_elevenlabs"
-
-# Fish
-elevenlabs completions fish > ~/.config/fish/completions/elevenlabs.fish
-
-# PowerShell
-elevenlabs completions powershell > ~/.config/powershell/Microsoft.PowerShell_profile.ps1
-```
-
-## Interactive Mode
-
-Run in interactive REPL mode:
-
-```bash
-elevenlabs interactive
-```
-
-Available commands in interactive mode:
-- `tts <text>` - Text to speech
-- `stt <file>` - Speech to text
-- `voices` - List voices
-- `models` - List models
-- `user` - User info
-- `exit` - Exit interactive mode
-
-## JSON Output
-
-For scripting, use JSON output mode:
-
-```bash
-elevenlabs -j voice list
-elevenlabs --json stt audio.mp3 --format json
-```
-
-## Error Handling
-
-The CLI includes automatic retry logic for transient failures:
-- Retries up to 3 times with exponential backoff
-- Handles 5xx server errors and rate limits (429)
-
-> **Learn more**: [API Error Codes](https://elevenlabs.io/docs/api-reference/error-codes)
+| Repository | Purpose | README |
+| --- | --- | --- |
+| [hongkongkiwi/homebrew-elevenlabs-cli](https://github.com/hongkongkiwi/homebrew-elevenlabs-cli) | Homebrew tap for releases | [Open](https://github.com/hongkongkiwi/homebrew-elevenlabs-cli/blob/main/README.md) |
+| [hongkongkiwi/scoop-elevenlabs-cli](https://github.com/hongkongkiwi/scoop-elevenlabs-cli) | Scoop bucket for Windows installs | [Open](https://github.com/hongkongkiwi/scoop-elevenlabs-cli/blob/main/README.md) |
+| [hongkongkiwi/skill-elevenlabs-cli](https://github.com/hongkongkiwi/skill-elevenlabs-cli) | AI-agent skill integration | [Open](https://github.com/hongkongkiwi/skill-elevenlabs-cli/blob/main/README.md) |
 
 ## Resources
 
-| Resource | Link |
-|----------|------|
-| API Reference | https://elevenlabs.io/docs/api-reference |
-| Documentation | https://elevenlabs.io/docs |
-| API Keys | https://elevenlabs.io/app/settings/api-keys |
-| Dashboard | https://elevenlabs.io/app |
-| Voice Library | https://elevenlabs.io/app/voice-library |
-| Changelog | https://elevenlabs.io/docs/changelog |
-| Status Page | https://status.elevenlabs.io |
-
-## License
-
-MIT License - see [LICENSE](LICENSE) file.
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
+- [ElevenLabs API Reference](https://elevenlabs.io/docs/api-reference)
+- [ElevenLabs Documentation](https://elevenlabs.io/docs)
+- [Voice Library](https://elevenlabs.io/app/voice-library)
+- [API Keys](https://elevenlabs.io/app/settings/api-keys)
+- [Status Page](https://status.elevenlabs.io)
 
 ## Support
 
-- [GitHub Issues](https://github.com/hongkongkiwi/elevenlabs-cli/issues)
-- [ElevenLabs Documentation](https://elevenlabs.io/docs)
-- [ElevenLabs API Reference](https://elevenlabs.io/docs/api-reference)
-- [ElevenLabs Support](https://elevenlabs.io/support)
+- [Report a bug](https://github.com/hongkongkiwi/elevenlabs-cli/issues)
+- [Request a feature](https://github.com/hongkongkiwi/elevenlabs-cli/issues)
+- [Discussions](https://github.com/hongkongkiwi/elevenlabs-cli/discussions)
+
+## Contributing
+
+Contributions are welcome.
+
+1. Fork the repository.
+2. Create a feature branch.
+3. Run tests and checks.
+4. Open a pull request with context and examples.
+
+## License
+
+MIT License. See [LICENSE](LICENSE).

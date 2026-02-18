@@ -795,12 +795,14 @@ jobs:
           git commit -m "Update elevenlabs-cli to v${VERSION}"
           git push
 
-  tag-skill-repo:
-    name: Tag Skill Repo
+  tag-downstream-repos:
+    name: Tag Downstream Repos
     needs: finalize-release
     runs-on: ubuntu-latest
     env:
       SKILL_REPO_UPDATE_TOKEN: ${{ secrets.SKILL_REPO_UPDATE_TOKEN }}
+      HOMEBREW_REPO_UPDATE_TOKEN: ${{ secrets.HOMEBREW_REPO_UPDATE_TOKEN }}
+      SCOOP_REPO_UPDATE_TOKEN: ${{ secrets.SCOOP_REPO_UPDATE_TOKEN }}
     steps:
       - name: Determine version
         id: version
@@ -809,7 +811,7 @@ jobs:
           VERSION="${VERSION_RAW#v}"
           echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
 
-      - name: Checkout skill repo
+      - name: Tag skill repo
         if: ${{ env.SKILL_REPO_UPDATE_TOKEN != '' }}
         uses: actions/checkout@v4
         with:
@@ -817,7 +819,7 @@ jobs:
           token: ${{ secrets.SKILL_REPO_UPDATE_TOKEN }}
           path: skill-repo
 
-      - name: Create and push tag
+      - name: Push tag to skill repo
         if: ${{ env.SKILL_REPO_UPDATE_TOKEN != '' }}
         working-directory: ./skill-repo
         run: |
@@ -827,3 +829,41 @@ jobs:
           git tag "v${VERSION}"
           git push origin "v${VERSION}"
           echo "Tagged skill repo with v${VERSION} - this will trigger ClawHub publish"
+
+      - name: Tag homebrew repo
+        if: ${{ env.HOMEBREW_REPO_UPDATE_TOKEN != '' }}
+        uses: actions/checkout@v4
+        with:
+          repository: hongkongkiwi/homebrew-elevenlabs-cli
+          token: ${{ secrets.HOMEBREW_REPO_UPDATE_TOKEN }}
+          path: homebrew-repo
+
+      - name: Push tag to homebrew repo
+        if: ${{ env.HOMEBREW_REPO_UPDATE_TOKEN != '' }}
+        working-directory: ./homebrew-repo
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag "v${VERSION}"
+          git push origin "v${VERSION}"
+          echo "Tagged homebrew repo with v${VERSION}"
+
+      - name: Tag scoop repo
+        if: ${{ env.SCOOP_REPO_UPDATE_TOKEN != '' }}
+        uses: actions/checkout@v4
+        with:
+          repository: hongkongkiwi/scoop-elevenlabs-cli
+          token: ${{ secrets.SCOOP_REPO_UPDATE_TOKEN }}
+          path: scoop-repo
+
+      - name: Push tag to scoop repo
+        if: ${{ env.SCOOP_REPO_UPDATE_TOKEN != '' }}
+        working-directory: ./scoop-repo
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag "v${VERSION}"
+          git push origin "v${VERSION}"
+          echo "Tagged scoop repo with v${VERSION}"
