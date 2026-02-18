@@ -803,6 +803,7 @@ jobs:
       SKILL_REPO_UPDATE_TOKEN: ${{ secrets.SKILL_REPO_UPDATE_TOKEN }}
       HOMEBREW_REPO_UPDATE_TOKEN: ${{ secrets.HOMEBREW_REPO_UPDATE_TOKEN }}
       SCOOP_REPO_UPDATE_TOKEN: ${{ secrets.SCOOP_REPO_UPDATE_TOKEN }}
+      ACTION_REPO_UPDATE_TOKEN: ${{ secrets.ACTION_REPO_UPDATE_TOKEN }}
     steps:
       - name: Determine version
         id: version
@@ -867,3 +868,22 @@ jobs:
           git tag "v${VERSION}"
           git push origin "v${VERSION}"
           echo "Tagged scoop repo with v${VERSION}"
+
+      - name: Tag action repo
+        if: ${{ env.ACTION_REPO_UPDATE_TOKEN != '' }}
+        uses: actions/checkout@v4
+        with:
+          repository: hongkongkiwi/action-elevenlabs-cli
+          token: ${{ secrets.ACTION_REPO_UPDATE_TOKEN }}
+          path: action-repo
+
+      - name: Push tag to action repo
+        if: ${{ env.ACTION_REPO_UPDATE_TOKEN != '' }}
+        working-directory: ./action-repo
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag "v${VERSION}"
+          git push origin "v${VERSION}"
+          echo "Tagged action repo with v${VERSION} - this will trigger GitHub Action release"
