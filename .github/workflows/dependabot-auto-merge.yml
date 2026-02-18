@@ -19,9 +19,9 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          pr_json=$(gh api repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }})
-          echo "mergeable_state=$(echo \"$pr_json\" | jq -r '.mergeable_state // \"unknown\"')" >> "$GITHUB_OUTPUT"
-          echo "draft=$(echo \"$pr_json\" | jq -r '.draft')" >> "$GITHUB_OUTPUT"
+          pr_json=$(gh api "repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}")
+          echo "mergeable_state=$(echo "$pr_json" | jq -r '.mergeable_state // "unknown"')" >> "$GITHUB_OUTPUT"
+          echo "draft=$(echo "$pr_json" | jq -r '.draft')" >> "$GITHUB_OUTPUT"
 
       - name: Ask Dependabot to rebase conflicted/behind PRs
         if: ${{ steps.pr.outputs.draft != 'true' && (steps.pr.outputs.mergeable_state == 'dirty' || steps.pr.outputs.mergeable_state == 'behind') }}
