@@ -813,7 +813,7 @@ jobs:
         if: ${{ env.SKILL_REPO_UPDATE_TOKEN != '' }}
         uses: actions/checkout@v4
         with:
-          repository: hongkongkiwi/elevenlabs-cli-skill
+          repository: hongkongkiwi/skill-elevenlabs-cli
           token: ${{ secrets.SKILL_REPO_UPDATE_TOKEN }}
           path: skill-repo
 

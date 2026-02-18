@@ -1,5 +1,5 @@
 use crate::cli::UpdateArgs;
-use crate::output::{print_error, print_success};
+use crate::output::print_success;
 use anyhow::{bail, Result};
 use colored::*;
 use std::env;
@@ -138,12 +138,10 @@ fn update_via_homebrew() -> Result<()> {
 
     if status.success() {
         print_success("Successfully updated via Homebrew!");
+        Ok(())
     } else {
-        print_error("Failed to update via Homebrew");
-        println!("  Try running: brew upgrade elevenlabs-cli");
+        bail!("Failed to update via Homebrew. Try running: brew upgrade elevenlabs-cli");
     }
-
-    Ok(())
 }
 
 fn update_via_cargo() -> Result<()> {
@@ -157,12 +155,10 @@ fn update_via_cargo() -> Result<()> {
 
     if status.success() {
         print_success("Successfully updated via Cargo!");
+        Ok(())
     } else {
-        print_error("Failed to update via Cargo");
-        println!("  Try running: cargo install elevenlabs-cli --force");
+        bail!("Failed to update via Cargo. Try running: cargo install elevenlabs-cli --force");
     }
-
-    Ok(())
 }
 
 fn update_via_snap() -> Result<()> {
@@ -176,12 +172,10 @@ fn update_via_snap() -> Result<()> {
 
     if status.success() {
         print_success("Successfully updated via Snap!");
+        Ok(())
     } else {
-        print_error("Failed to update via Snap");
-        println!("  Try running: sudo snap refresh elevenlabs-cli");
+        bail!("Failed to update via Snap. Try running: sudo snap refresh elevenlabs-cli");
     }
-
-    Ok(())
 }
 
 fn update_via_aur() -> Result<()> {
